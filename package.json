@@ -1,0 +1,24 @@
+{
+  "name": "digger",
+  "version": "0.1.0",
+  "description": "Server framework for webliero",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && cat vendor/s.min.js dist/digger.js > dist/digger.s.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/webliero/digger.git"
+  },
+  "author": "fonsan@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/webliero/digger/issues"
+  },
+  "dependencies": {
+    "ts-deepmerge": "",
+    "ts-essentials": ""
+  },
+  "homepage": "https://gitlab.com/webliero/digger#readme"
+}
