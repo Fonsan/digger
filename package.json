@@ -2,10 +2,10 @@
   "name": "digger",
   "version": "0.1.0",
   "description": "Server framework for webliero",
-  "private": true,
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --config webpack.config.js"
+    "build": "webpack --config webpack.config.cjs"
   },
   "repository": {
     "type": "git",
