@@ -261,7 +261,7 @@ export class Instance {
     const auth = this.playerIdToAuth.get(playerId) as string;
     this.mutedPlayers.set(auth, {
       time: new Date(Date.now() + duration),
-      timeout: setTimeout(() => this.unMute(playerId), duration)
+      timeout: window.setTimeout(() => this.unMute(playerId), duration)
     })
   }
 
@@ -298,7 +298,7 @@ export class Instance {
     }
     this.electionTimeouts.set(
       auth,
-      setTimeout(() => this.electionTimeouts.delete(auth), this.config.voteTimeout)
+      window.setTimeout(() => this.electionTimeouts.delete(auth), this.config.voteTimeout)
     )
     this.currentElection = new Election(this, name, player, () => {
       this.currentElection = undefined;

@@ -54,7 +54,7 @@ export class AFK extends Plugin<AFKConfig> {
 
   private activate({detail: player}:CustomEvent<WLPlayer>):void {
     if (!this.hotPlayers.get(player.id)) {
-      this.hotPlayers.set(player.id, setTimeout(() => this.hotPlayers.delete(player.id), this.hotTimeout))
+      this.hotPlayers.set(player.id, window.setTimeout(() => this.hotPlayers.delete(player.id), this.hotTimeout))
       if (this.playingPlayers.get(player.id)) {
         this.resetPlayerTimeout(player.id)
       }
@@ -63,7 +63,7 @@ export class AFK extends Plugin<AFKConfig> {
 
   private resetPlayerTimeout(playerId:number):void {
     this.clearPlayerTimeout(playerId)
-    this.playingPlayers.set(playerId, setTimeout(() => this.evictPlayer(playerId), this.warnTimeout))
+    this.playingPlayers.set(playerId, window.setTimeout(() => this.evictPlayer(playerId), this.warnTimeout))
   }
 
   private clearPlayerTimeout(playerId: number):void {

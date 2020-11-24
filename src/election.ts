@@ -16,10 +16,10 @@ export class Election {
     this.voteCommandHandler = this.instance.registerCommand(['!y', '!n'], '', this.handleVote)
     this.instance.on('playerLeave', this.reCount)
     this.instance.on('playerJoin', this.reCount)
-    this.timeout = setTimeout(() => {
+    this.timeout = window.setTimeout(() => {
       this.instance.notify(`Vote: ${name} failed`);
       this.end();
-    }, this.instance.config.voteTime)
+    }, this.instance.config.voteTime) as number;
     this.instance.notify(`Vote: ${name} started, vote with !y or !n, current `);;
     this.reCount()
   }

@@ -2,10 +2,10 @@
   "name": "digger",
   "version": "0.1.0",
   "description": "Server framework for webliero",
-  "main": "index.js",
+  "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && cat vendor/s.min.js dist/digger.js > dist/digger.s.js"
+    "build": "webpack --config webpack.config.js"
   },
   "repository": {
     "type": "git",
@@ -20,5 +20,13 @@
     "ts-deepmerge": "",
     "ts-essentials": ""
   },
-  "homepage": "https://gitlab.com/webliero/digger#readme"
+  "homepage": "https://gitlab.com/webliero/digger#readme",
+  "devDependencies": {
+    "clean-webpack-plugin": "^3.0.0",
+    "ts-loader": "^8.0.11",
+    "typescript": "^4.1.2",
+    "webpack": "^5.6.0",
+    "webpack-cli": "^4.2.0",
+    "webpack-merge": "^4.2.2"
+  }
 }
