@@ -217,10 +217,10 @@ class Admin extends Plugin {
                     this.unMute(player, targetPlayer);
                     break;
                 case 'k':
-                    this.instance.room.kickPlayer(targetPlayer.id, `You have been kicked ${parts[3]}`, false);
+                    this.instance.room.kickPlayer(targetPlayer.id, `You have been kicked ${parts[3] || ''}`, false);
                     break;
                 case 'b': {
-                    this.instance.temporaryBan(targetPlayer, `You have been kicked for ${Math.round(this.config.kickDuration / 1000 / 60)} minutes ${parts[3]}`, this.config.kickDuration);
+                    this.instance.temporaryBan(targetPlayer, `You have been kicked for ${Math.round(this.config.kickDuration / 1000 / 60)} minutes ${parts[3] || ''}`, this.config.kickDuration);
                     break;
                 }
                 default: return this.respondWithUsage(player.id);
@@ -229,11 +229,11 @@ class Admin extends Plugin {
     }
     mute(admin, targetPlayer) {
         const minutes = this.config.muteDuration / 1000 / 60;
-        this.instance.notify(`${targetPlayer.name} has been muted for ${minutes} minutes, use "!a unmute ${this.instance.shortId(targetPlayer.id)}" to unmute`);
+        this.instance.notify(`${targetPlayer.name} has been muted for ${minutes} minutes, use "!a unmute ${this.instance.shortId(targetPlayer.id)}" to unmute`, admin.id);
         this.instance.mute(targetPlayer.id, this.config.muteDuration);
     }
     unMute(admin, targetPlayer) {
-        this.instance.notify(`${targetPlayer.name} has been ungagged`);
+        this.instance.notify(`${targetPlayer.name} has been ungagged`, admin.id);
         this.instance.unMute(targetPlayer.id);
     }
     respondWithUsage(playerId) {
@@ -342,20 +342,20 @@ class Info extends Plugin {
             this.instance.room.getPlayerList().forEach(otherPlayer => {
                 if (this.instance.playerIdToAuth.get(otherPlayer.id) != player.auth) {
                     this.instance.notify(`${player.name} changed their name, last ${names.length} previously known names:`, otherPlayer.id);
-                    names.forEach(([name, date]) => this.instance.notify(name, otherPlayer.id));
+                    names.forEach(([name, date]) => this.instance.notify(`${name} ${date.toString().substr(0, 21)}`, otherPlayer.id));
                 }
             });
         };
         this.handleJoin = ({ detail: player }) => {
             const prev = this.aliases.get(player.auth);
             if (prev) {
-                if (prev.get(player.name)) {
+                if (!prev.get(player.name)) {
                     this.instance.emit('changePlayerName', player);
                 }
                 prev.set(player.name, new Date());
             }
             else {
-                this.aliases.set(player.auth, new Map());
+                this.aliases.set(player.auth, new Map([[player.name, new Date()]]));
                 this.instance.emit('newPlayer', player);
             }
         };
@@ -658,8 +658,7 @@ class Instance extends EventTarget {
                     callback.apply(this, [player, message]);
                 }
                 else {
-                    const response = `"${commandName}" not recognized command`;
-                    this.room.sendAnnouncement(response, player.id, 0xFF0000, "bold", 2);
+                    this.error(`"${commandName}" not recognized command`, player.id);
                 }
                 event.preventDefault();
             }
@@ -667,7 +666,7 @@ class Instance extends EventTarget {
             const muteConfig = this.mutedPlayers.get(auth);
             if (muteConfig) {
                 const minutes = Math.round((muteConfig.time.getTime() - Date.now()) / 1000 / 60);
-                this.room.sendAnnouncement(`You are muted for ${minutes} minutes more`, player.id, 0xFF0000, "bold", 2);
+                this.error(`You have been muted for ${minutes} minutes more`, player.id);
                 event.preventDefault();
             }
         };

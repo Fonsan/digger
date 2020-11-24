@@ -52,14 +52,13 @@ export class Info extends Plugin<InfoConfig> {
   private handleJoin = ({detail: player}: CustomEvent<WLJoiningPlayer>): void => {
     const prev = this.aliases.get(player.auth)
     if (prev) {
-      if (prev.get(player.name)) {
+      if (!prev.get(player.name)) {
         this.instance.emit('changePlayerName', player)
       }
       prev.set(player.name, new Date())
     } else {
-      this.aliases.set(player.auth, new Map<string, Date>());
+      this.aliases.set(player.auth, new Map<string, Date>([[player.name, new Date()]]));
       this.instance.emit('newPlayer', player)
     }
   }
 }
-
