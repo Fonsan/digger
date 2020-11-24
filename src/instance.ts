@@ -190,7 +190,7 @@ export class Instance {
     this.on('playerLeave', ({detail: player}) => this.playerIdToAuth.delete(player.id))
     this.on('playerChat', this.handlePlayerChat);
     this.on('playerTeamChange', this.handleActive);
-    this.on('roomLink', ({detail: url}) => this.log("Started: `${url}`"))
+    this.on('roomLink', ({detail: url}) => this.log(`Started: ${url}`))
     this.on('captcha', () => this.log('Failed to start: Faulty token'))
     this.on('playerJoin', ({detail: player}: CustomEvent<WLJoiningPlayer>) => this.notify(Instance.motd, player.id))
     this.registerCommand(['!h', '!help'], 'Display this help', this.handleHelp)
