@@ -432,7 +432,7 @@ export class Instance extends EventTarget {
     const muteConfig = this.mutedPlayers.get(auth)
     if (muteConfig) {
       const minutes = Math.round((muteConfig.time.getTime() - Date.now()) / 1000 / 60)
-      this.error(`You have been muted for ${minutes} minutes more`, player.id;
+      this.error(`You have been muted for ${minutes} minutes more`, player.id);
       event.preventDefault()
     }
   }
