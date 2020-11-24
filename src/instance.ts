@@ -169,9 +169,6 @@ export class Instance {
     this.config = config;
     this.initialSettings = initialSettings;
     this.config = merge(Instance.defaultConfig, config)
-    if ((window as any).onWLLoaded) {
-      throw 'already loaded'
-    }
     if (!isStrictInitOptions(initOptions)) {
       throw 'roomName, maxPlayers, public and token must be set'
     }
