@@ -16,12 +16,12 @@ export abstract class Plugin<ConfigType extends PluginConfig> {
     instance.log(`${this.constructor.name} loaded`)
     this.instance = instance;
     this.config = config;
-    if (config.enabled) {
-      this.enable()
-      instance.log(`${this.constructor.name} enabled with ${JSON.stringify(config)}`)
-    }
   }
-  public abstract enable(): void;
+  public enable():void {
+    this.activate();
+    this.instance.log(`${this.constructor.name} enabled with ${JSON.stringify(this.config)}`)
+  }
+  public abstract activate(): void;
   public disable(): void {
     this.instance.log(`${this.constructor.name} disabled`)
     this.listeners.forEach(({name, listener}) => {

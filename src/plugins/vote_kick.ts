@@ -3,7 +3,7 @@ export interface VoteKickConfig extends PluginConfig {
   kickDuration: number;
 }
 export class VoteKick extends Plugin<VoteKickConfig> {
-  public enable() {
+  public activate() {
     const minutes = Math.round(this.config.kickDuration / 1000 / 60)
     this.registerCommand(['!vk', '!votekick'], 'Kick player vote, type !vk for Usage', (player, message) => {
       const parts = message.split(' ')

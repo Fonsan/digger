@@ -3,7 +3,7 @@ export class OnePlayer extends Plugin<PluginConfig> {
   playingPlayers = new Map<String, WLJoiningPlayer>();
   idToAuth = new Map<number, string>();
 
-  public enable() {
+  public activate() {
     this.on('playerJoin', this.addPlayer)
     this.on('playerLeave', this.removePlayer);
   }

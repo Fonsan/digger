@@ -5,7 +5,7 @@ import { PluginConfig } from './plugins/plugin'
 
 import { Admin, AdminConfig } from './plugins/admin'
 import { AFK, AFKConfig } from './plugins/afk'
-import { Aliases, AliasesConfig } from './plugins/aliases'
+import { Info, InfoConfig } from './plugins/info'
 import { Connection, ConnectionConfig } from './plugins/connection'
 import { List } from './plugins/list'
 import { OnePlayer } from './plugins/one_player'
@@ -23,7 +23,7 @@ export interface Config {
   plugins: {
     admin: AdminConfig,
     afk: AFKConfig,
-    aliases: AliasesConfig,
+    info: InfoConfig,
     connection: ConnectionConfig,
     list: PluginConfig,
     onePlayer: PluginConfig,
@@ -114,7 +114,7 @@ export class Instance {
         hotTimeout: 3000,
         kickAFKSpectatorWhenFull: true
       },
-      aliases: {
+      info: {
         enabled: true,
         announceNameChange: true,
         annouceNamesCount: 4
@@ -309,28 +309,40 @@ export class Instance {
         switch(name) {
           case 'admin':
           new Admin(this, this.config.plugins.admin)
+            break;
           case 'afk':
             new AFK(this, this.config.plugins.afk)
-          case 'aliases':
-            new Aliases(this, this.config.plugins.aliases)
+            break;
+          case 'info':
+            new Info(this, this.config.plugins.info)
+            break;
           case 'connection':
             new Connection(this, this.config.plugins.connection)
+            break;
           case 'list':
             new List(this, this.config.plugins.list)
+            break;
           case 'onePlayer':
             new OnePlayer(this, this.config.plugins.onePlayer)
+            break;
           case 'scores':
             new Scores(this, this.config.plugins.scores)
+            break;
           case 'slurper':
             new Slurper(this, this.config.plugins.slurper)
+            break;
           case 'voteMutePlayer':
             new VoteMute(this, this.config.plugins.voteMutePlayer)
+            break;
           case 'voteKickPlayer':
             new VoteKick(this, this.config.plugins.voteKickPlayer)
+            break;
           case 'voteRestartMap':
             new VoteRestartMap(this, this.config.plugins.voteRestartMap)
+            break;
           case 'voteSkipMap':
             new VoteSkipMap(this, this.config.plugins.voteSkipMap)
+            break;
         }
       }
     })

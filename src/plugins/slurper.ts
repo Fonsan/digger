@@ -6,7 +6,7 @@ export interface SlurperConfig extends PluginConfig {
 }
 export class Slurper extends Plugin<SlurperConfig> {
   webSocket?: WebSocket;
-  public enable() {
+  public activate() {
     if (this.config.url) {
       this.webSocket = new WebSocket(this.config.url)
     }

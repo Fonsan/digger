@@ -23,13 +23,13 @@ export class AFK extends Plugin<AFKConfig> {
     this.warnTimeout = this.timeout - this.graceTime;
   }
 
-  public enable() {
+  public activate() {
     this.on('playerJoin', this.handleMotd)
     if (this.config.kickAFKSpectatorWhenFull) {
       this.on('playerJoin', this.purgeInactiveSpectators)
     }
     this.on('playerTeamChange', this.handleTeamChange)
-    this.on('playerActivity', this.activate)
+    this.on('playerActivity', this.activatePlayer)
     this.on('playerLeave', this.handleLeave)
   }
 
@@ -52,7 +52,7 @@ export class AFK extends Plugin<AFKConfig> {
     this.clearPlayerTimeout(player.id)
   }
 
-  private activate({detail: player}:CustomEvent<WLPlayer>):void {
+  private activatePlayer({detail: player}:CustomEvent<WLPlayer>):void {
     if (!this.hotPlayers.get(player.id)) {
       this.hotPlayers.set(player.id, window.setTimeout(() => this.hotPlayers.delete(player.id), this.hotTimeout))
       if (this.playingPlayers.get(player.id)) {

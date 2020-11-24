@@ -3,7 +3,7 @@ export interface VoteMuteConfig extends PluginConfig {
   muteDuration: number;
 }
 export class VoteMute extends Plugin<VoteMuteConfig> {
-  public enable() {
+  public activate() {
     const minutes = this.config.muteDuration / 1000 / 60
     this.registerCommand(['!vm', '!votemute'], 'Mute player vote, type !vm for Usage', (player, message) => {
       const parts = message.split(' ')

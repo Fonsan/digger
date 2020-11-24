@@ -12,7 +12,7 @@ export class Admin extends Plugin<AdminConfig> {
     this.auths = new Set(config.auths)
   }
 
-  public enable() {
+  public activate() {
     this.on('playerJoin', this.handleJoin)
     this.registerCommand(['!a'], 'Admin: !a s[kip] | r[estart] | d[efcon6] | m[ute] t | u[nmute] t | k[ick] t | b[an] t | c[ban] t', (player: WLPlayer, message: string) => {
       if (!player.admin) {

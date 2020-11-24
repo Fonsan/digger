@@ -6,7 +6,7 @@ export class Connection extends Plugin<ConnectionConfig> {
   connectionMap = new Map<string, Map<number, Date>>();
   playerIdToConn = new Map<number, string>();
 
-  public enable() {
+  public activate() {
     this.on('playerJoin', this.addPlayer)
     this.on('playerLeave', this.removePlayer);
   }
