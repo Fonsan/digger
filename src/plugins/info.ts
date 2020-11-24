@@ -39,7 +39,7 @@ export class Info extends Plugin<InfoConfig> {
     this.instance.room.getPlayerList().forEach(otherPlayer => {
       if (this.instance.playerIdToAuth.get(otherPlayer.id) != player.auth) {
         this.instance.notify(`${player.name} changed their name, last ${names.length} previously known names:`, otherPlayer.id)
-        names.forEach(([name, date]: [string, Date]) => this.instance.notify(name, otherPlayer.id))
+        names.forEach(([name, date]: [string, Date]) => this.instance.notify(`${name} ${date.toString().substr(0,21)}`, otherPlayer.id))
       }
     })
   }

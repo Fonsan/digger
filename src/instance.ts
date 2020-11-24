@@ -36,7 +36,6 @@ export interface Config {
     voteSkipMap: PluginConfig,
   };
 }
-
 enum EventEnum {
   captcha,
   changePlayerName,
@@ -425,8 +424,7 @@ export class Instance extends EventTarget {
       if (callback) {
         callback.apply(this, [player, message])
       } else {
-        const response = `"${commandName}" not recognized command`
-        this.room.sendAnnouncement(response, player.id, 0xFF0000, "bold", 2);
+        this.error(`"${commandName}" not recognized command`, player.id)
       }
       event.preventDefault()
     }
@@ -434,7 +432,7 @@ export class Instance extends EventTarget {
     const muteConfig = this.mutedPlayers.get(auth)
     if (muteConfig) {
       const minutes = Math.round((muteConfig.time.getTime() - Date.now()) / 1000 / 60)
-      this.room.sendAnnouncement(`You are muted for ${minutes} minutes more`, player.id, 0xFF0000, "bold", 2);
+      this.error(`You have been muted for ${minutes} minutes more`, player.id;
       event.preventDefault()
     }
   }

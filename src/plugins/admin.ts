@@ -60,11 +60,11 @@ export class Admin extends Plugin<AdminConfig> {
       switch(command) {
         case 'm': this.mute(player, targetPlayer); break;
         case 'u': this.unMute(player, targetPlayer); break;
-        case 'k': this.instance.room.kickPlayer(targetPlayer.id, `You have been kicked ${parts[3]}`, false); break;
+        case 'k': this.instance.room.kickPlayer(targetPlayer.id, `You have been kicked ${parts[3] || ''}`, false); break;
         case 'b': {
           this.instance.temporaryBan(
             targetPlayer,
-            `You have been kicked for ${Math.round(this.config.kickDuration / 1000 / 60)} minutes ${parts[3]}`,
+            `You have been kicked for ${Math.round(this.config.kickDuration / 1000 / 60)} minutes ${parts[3] || ''}`,
             this.config.kickDuration
           );
           break;
@@ -76,12 +76,12 @@ export class Admin extends Plugin<AdminConfig> {
 
   private mute(admin: WLPlayer, targetPlayer: WLPlayer) {
     const minutes = this.config.muteDuration / 1000 / 60
-    this.instance.notify(`${targetPlayer.name} has been muted for ${minutes} minutes, use "!a unmute ${this.instance.shortId(targetPlayer.id)}" to unmute`)
+    this.instance.notify(`${targetPlayer.name} has been muted for ${minutes} minutes, use "!a unmute ${this.instance.shortId(targetPlayer.id)}" to unmute`, admin.id)
     this.instance.mute(targetPlayer.id, this.config.muteDuration)
   }
 
   private unMute(admin: WLPlayer, targetPlayer: WLPlayer) {
-    this.instance.notify(`${targetPlayer.name} has been ungagged`)
+    this.instance.notify(`${targetPlayer.name} has been ungagged`, admin.id)
     this.instance.unMute(targetPlayer.id)
   }
 
