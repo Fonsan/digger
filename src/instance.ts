@@ -94,7 +94,7 @@ export class Instance extends EventTarget {
   public readonly electionTimeouts = new Map<string, number>()
   public readonly plugins = new Map<string, Plugin<any>>()
 
-  public static configVersion = '0.1.0';
+  public static configVersion = 'a';
   public static spectatorTeam = 0;
   public static motd = `Digger ${Instance.configVersion} loaded, write !h or !help in chat for commands`
   private static defaultConfig: Config = {
