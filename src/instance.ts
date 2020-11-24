@@ -434,7 +434,7 @@ export class Instance extends EventTarget {
     }
   }
 
-  private setNewGame():void {
+  private setNewGame = () => {
     this.gameStartTime = new Date();
     this.gameId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
   }
