@@ -229,14 +229,14 @@ export class Instance {
     this.room.sendAnnouncement(message, target, 0xFF0000, "bold", 2)
   }
 
-  public registerCommand (names: string[], description: string, callback: ((player: WLPlayer, message: string) => void) ):Function {
+  public registerCommand(names: string[], description: string, callback: ((player: WLPlayer, message: string) => void) ):Function {
     this.commandDescriptions.set(names[0], [...names.map(name => name.padEnd(4, ' ')), description].join(" "))
     names.forEach(name => {
       if(name[0] != '!' || name.length < 2) {
         throw `${name} command not valid`
       }
       if(this.commands.get(name)) {
-        throw 'command already registered'
+        throw `command already registered ${name}`
       }
       this.commands.set(name, callback)
     })
