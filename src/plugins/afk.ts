@@ -33,12 +33,12 @@ export class AFK extends Plugin<AFKConfig> {
     this.on('playerLeave', this.handleLeave)
   }
 
-  private handleMotd({detail: player}: CustomEvent<WLJoiningPlayer>):void {
+  private handleMotd = ({detail: player}: CustomEvent<WLJoiningPlayer>):void => {
     const motd = `AFK detection loaded, players are moved to spectators after ${this.timeout / 1000} seconds of inactivity`
     this.instance.notify(motd, player.id)
   }
 
-  private handleTeamChange({detail: {player, byPlayer}}: CustomEvent<PlayerChange>):void {
+  private handleTeamChange = ({detail: {player, byPlayer}}: CustomEvent<PlayerChange>):void => {
     if (player.team == Instance.spectatorTeam) {
       this.clearPlayerTimeout(player.id)
     } else {
@@ -47,12 +47,12 @@ export class AFK extends Plugin<AFKConfig> {
     }
   }
 
-  private handleLeave({detail: player}:CustomEvent<WLPlayer>) {
+  private handleLeave = ({detail: player}:CustomEvent<WLPlayer>) => {
     this.kickCandidates.delete(player.id)
     this.clearPlayerTimeout(player.id)
   }
 
-  private activatePlayer({detail: player}:CustomEvent<WLPlayer>):void {
+  private activatePlayer = ({detail: player}:CustomEvent<WLPlayer>):void => {
     if (!this.hotPlayers.get(player.id)) {
       this.hotPlayers.set(player.id, window.setTimeout(() => this.hotPlayers.delete(player.id), this.hotTimeout))
       if (this.playingPlayers.get(player.id)) {
@@ -90,7 +90,7 @@ export class AFK extends Plugin<AFKConfig> {
     }, this.graceTime)
   }
 
-  private purgeInactiveSpectators({detail: player}: CustomEvent<WLJoiningPlayer>):void {
+  private purgeInactiveSpectators = ({detail: player}: CustomEvent<WLJoiningPlayer>):void => {
     const list = this.instance.room.getPlayerList();
     if (list.length >= this.instance.initOptions.maxPlayers) {
       const oldestPlayerPair = Array.from(this.kickCandidates).reduce((acc, el) => acc[1] < el[1] ? acc : el)

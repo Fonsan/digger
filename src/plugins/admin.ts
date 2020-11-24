@@ -20,34 +20,57 @@ export class Admin extends Plugin<AdminConfig> {
         return
       }
       const parts = message.replace(/ +/, ' ').split(' ')
+      this.instance.log(parts)
+      if (parts.length < 2) {
+        this.respondWithUsage(player.id)
+        return;
+      }
+      const command = parts[1][0]
       if (parts.length == 2) {
-        switch(parts[1][0]) {
-          case 's': this.instance.room.endGame();
-          case 'r': this.instance.room.restartGame();
-          case 'd': this.instance.error('Not yet implemented', player.id)
+        switch(command) {
+          case 's': {
+            this.instance.room.endGame();
+            this.instance.notify(`Admin: ${player.name}, ended game`)
+            break;
+          }
+          case 'r': {
+            this.instance.room.restartGame();
+            this.instance.notify(`Admin: ${player.name}, restared game`)
+            break;
+          }
+          case 'd': this.instance.error('Not yet implemented', player.id); break;
           default: return this.respondWithUsage(player.id);
         }
-      } else if(parts.length >= 3) {
-        const targetPlayer = this.instance.findPlayer(parts[2])
-        if (!targetPlayer) {
-          this.instance.notify(`Could not find targetPlayer: ${parts[2]}, use !list`, player.id)
+        return;
+      }
+      if (command == 'c') {
+        const id = parseInt(parts[2], 10)
+        if (isNaN(id)) {
+          this.instance.error(`You need to pass a number, !a c 123`)
           return;
         }
-        switch(parts[2][0]) {
-          case 'm': this.mute(player, targetPlayer)
-          case 'u': this.unMute(player, targetPlayer)
-          case 'k': this.instance.room.kickPlayer(targetPlayer.id, `You have been kicked ${parts[3]}`, false)
-          case 'b': this.instance.temporaryBan(
+        this.instance.room.clearBan(id);
+        this.instance.notify(`Clearing ban for player with previous id ${id}`)
+      }
+      const targetPlayer = this.instance.findPlayer(parts[2])
+      if (!targetPlayer) {
+        this.instance.notify(`Could not find targetPlayer: ${parts[2]}, use !list`, player.id)
+        return;
+      }
+      switch(command) {
+        case 'm': this.mute(player, targetPlayer); break;
+        case 'u': this.unMute(player, targetPlayer); break;
+        case 'k': this.instance.room.kickPlayer(targetPlayer.id, `You have been kicked ${parts[3]}`, false); break;
+        case 'b': {
+          this.instance.temporaryBan(
             targetPlayer,
             `You have been kicked for ${Math.round(this.config.kickDuration / 1000 / 60)} minutes ${parts[3]}`,
             this.config.kickDuration
-          )
-          case 'c': this.instance.room.clearBan(targetPlayer.id)
-          default: return this.respondWithUsage(player.id);
+          );
+          break;
         }
-      } else {
-        this.respondWithUsage(player.id)
-      }
+        default: return this.respondWithUsage(player.id);
+       }
     })
   }
 
@@ -74,7 +97,7 @@ export class Admin extends Plugin<AdminConfig> {
     this.instance.notify("!a c 123 or !a cban 123", playerId)
   }
 
-  private handleJoin({detail: player}: CustomEvent<WLJoiningPlayer>):void {
+  private handleJoin = ({detail: player}: CustomEvent<WLJoiningPlayer>):void => {
     if (this.auths.has(player.auth) ) {
       this.instance.room.setPlayerAdmin(player.id, true);
     }

@@ -11,7 +11,7 @@ export class Connection extends Plugin<ConnectionConfig> {
     this.on('playerLeave', this.removePlayer);
   }
 
-  private addPlayer({detail: player}:CustomEvent<WLJoiningPlayer>):void {
+  private addPlayer = ({detail: player}:CustomEvent<WLJoiningPlayer>):void => {
     this.playerIdToConn.set(player.id, player.conn)
     const connectionPlayers = this.connectionMap.get(player.conn)
     if (connectionPlayers) {
@@ -26,7 +26,7 @@ export class Connection extends Plugin<ConnectionConfig> {
     }
   }
 
-  private removePlayer({detail: player}:CustomEvent<WLPlayer>) {
+  private removePlayer = ({detail: player}:CustomEvent<WLPlayer>) => {
     const conn = this.playerIdToConn.get(player.id) as string;
     const connectionPlayers = this.connectionMap.get(conn) as Map<number, Date>;
     connectionPlayers.delete(player.id)

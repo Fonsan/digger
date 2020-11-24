@@ -34,7 +34,7 @@ export class Info extends Plugin<InfoConfig> {
     }
   }
 
-  private handleChangeName({detail: player}: CustomEvent<WLJoiningPlayer>):void {
+  private handleChangeName = ({detail: player}: CustomEvent<WLJoiningPlayer>):void => {
     const names = this.namesByLastUsed(player.auth).slice(0, this.config.annouceNamesCount)
     this.instance.room.getPlayerList().forEach(otherPlayer => {
       if (this.instance.playerIdToAuth.get(otherPlayer.id) != player.auth) {
@@ -49,7 +49,7 @@ export class Info extends Plugin<InfoConfig> {
      return Array.from(names).sort((a,b) => b[1].getTime() - a[1].getTime())
   }
 
-  private handleJoin({detail: player}: CustomEvent<WLJoiningPlayer>): void {
+  private handleJoin = ({detail: player}: CustomEvent<WLJoiningPlayer>): void => {
     const prev = this.aliases.get(player.auth)
     if (prev) {
       if (prev.get(player.name)) {

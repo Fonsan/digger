@@ -11,12 +11,12 @@ export class Slurper extends Plugin<SlurperConfig> {
       this.webSocket = new WebSocket(this.config.url)
     }
     this.config.events.forEach(eventName => {
-      this.on(eventName, this.publish);
+      this.on(eventName, this.publish.bind(this));
     })
     this.on('gameStart', this.handleGameStart)
   }
 
-  private handleGameStart(event: CustomEvent):void {
+  private handleGameStart = (event: CustomEvent):void => {
     this.publish(new CustomEvent('GameSettings', {detail: this.instance.room.getSettings()}))
   }
 

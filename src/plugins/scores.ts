@@ -4,7 +4,7 @@ export class Scores extends Plugin<PluginConfig> {
     this.on('gameEnd', this.handleGameEnd)
   }
 
-  private handleGameEnd():void {
+  private handleGameEnd = () => {
     const players = this.instance.room.getPlayerList()
     const teams = new Map<number, boolean>();
     const playerScores = Array<{player: WLPlayer, score: {kills: number, deaths: number, score: number}}>();

@@ -1,7 +1,7 @@
 import { DeepNonNullable } from "ts-essentials"
 import merge from "ts-deepmerge";
 import { Election } from './election'
-import { PluginConfig } from './plugins/plugin'
+import { Plugin, PluginConfig } from './plugins/plugin'
 
 import { Admin, AdminConfig } from './plugins/admin'
 import { AFK, AFKConfig } from './plugins/afk'
@@ -73,7 +73,7 @@ function isStrictInitOptions(options: WLInitOptions): options is StrictInitOptio
   const so = (options as StrictInitOptions)
   return !!so.roomName && !!so.maxPlayers && so.public !== undefined && !!so.token;
 }
-export class Instance {
+export class Instance extends EventTarget {
   window: Window;
   fullRoom: WLRoom;
   initialSettings: WLGameSettings;
@@ -92,6 +92,7 @@ export class Instance {
   public readonly mutedPlayers = new Map<string, MuteConfig>()
   public readonly activePlayers = new Map<number, boolean>()
   public readonly electionTimeouts = new Map<string, number>()
+  public readonly plugins = new Map<string, Plugin<any>>()
 
   public static configVersion = '0.1.0';
   public static spectatorTeam = 0;
@@ -165,6 +166,7 @@ export class Instance {
   }
 
   constructor(window: Window, initOptions: WLInitOptions, initialSettings: WLGameSettings, config: DeepNonNullable<Config>) {
+    super();
     this.window = window
     this.config = config;
     this.initialSettings = initialSettings;
@@ -183,7 +185,7 @@ export class Instance {
     this.serverId = this.initOptions.roomName.replace(/[^A-Z0-9]/gi, '-').toLowerCase()
     this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
     this.setNewGame();
-    this.eventTarget = (new EventTarget() as CustomEventTarget);
+    this.eventTarget = (this as CustomEventTarget);
     this.registerRoomCallbacks()
     this.on('gameStart', (e) => { this.setNewGame() })
     this.on('playerJoin', ({detail: player}:CustomEvent<WLJoiningPlayer>) => this.playerIdToAuth.set(player.id, player.auth))
@@ -290,17 +292,22 @@ export class Instance {
       return;
     }
     if (this.currentElection) {
-      this.notify("Another vote is already active, wait your turn", player.id);
+      this.error("Another vote is already active, wait your turn", player.id);
       return;
     }
     this.electionTimeouts.set(
       auth,
       window.setTimeout(() => this.electionTimeouts.delete(auth), this.config.voteTimeout)
     )
-    this.currentElection = new Election(this, name, player, () => {
+    new Election(this, name, player, () => {
       this.currentElection = undefined;
       callback()
     })
+  }
+
+  private registerPlugin(name: string, plugin: Plugin<any>) {
+    this.plugins.set(name, plugin);
+    plugin.enable();
   }
 
   private enablePlugins():void {
@@ -308,40 +315,76 @@ export class Instance {
       if (pluginConfig.enabled) {
         switch(name) {
           case 'admin':
-          new Admin(this, this.config.plugins.admin)
+            this.registerPlugin(
+              name,
+              new Admin(this, this.config.plugins.admin)
+            )
             break;
           case 'afk':
-            new AFK(this, this.config.plugins.afk)
+            this.registerPlugin(
+              name,
+              new AFK(this, this.config.plugins.afk)
+            )
             break;
           case 'info':
-            new Info(this, this.config.plugins.info)
+            this.registerPlugin(
+              name,
+              new Info(this, this.config.plugins.info)
+            )
             break;
           case 'connection':
-            new Connection(this, this.config.plugins.connection)
+            this.registerPlugin(
+              name,
+              new Connection(this, this.config.plugins.connection)
+            )
             break;
           case 'list':
-            new List(this, this.config.plugins.list)
+            this.registerPlugin(
+              name,
+              new List(this, this.config.plugins.list)
+            )
             break;
           case 'onePlayer':
-            new OnePlayer(this, this.config.plugins.onePlayer)
+            this.registerPlugin(
+              name,
+              new OnePlayer(this, this.config.plugins.onePlayer)
+            )
             break;
           case 'scores':
-            new Scores(this, this.config.plugins.scores)
+            this.registerPlugin(
+              name,
+              new Scores(this, this.config.plugins.scores)
+            )
             break;
           case 'slurper':
-            new Slurper(this, this.config.plugins.slurper)
+            this.registerPlugin(
+              name,
+              new Slurper(this, this.config.plugins.slurper)
+            )
             break;
           case 'voteMutePlayer':
-            new VoteMute(this, this.config.plugins.voteMutePlayer)
+            this.registerPlugin(
+              name,
+              new VoteMute(this, this.config.plugins.voteMutePlayer)
+            )
             break;
           case 'voteKickPlayer':
-            new VoteKick(this, this.config.plugins.voteKickPlayer)
+            this.registerPlugin(
+              name,
+              new VoteKick(this, this.config.plugins.voteKickPlayer)
+            )
             break;
           case 'voteRestartMap':
-            new VoteRestartMap(this, this.config.plugins.voteRestartMap)
+            this.registerPlugin(
+              name,
+              new VoteRestartMap(this, this.config.plugins.voteRestartMap)
+            )
             break;
           case 'voteSkipMap':
-            new VoteSkipMap(this, this.config.plugins.voteSkipMap)
+            this.registerPlugin(
+              name,
+              new VoteSkipMap(this, this.config.plugins.voteSkipMap)
+            )
             break;
         }
       }
@@ -355,7 +398,7 @@ export class Instance {
       .forEach(command => this.notify(command, player.id))
   }
 
-  private handleActive({detail: {player, byPlayer}}: CustomEvent<PlayerChange>) {
+  private handleActive = ({detail: {player, byPlayer}}: CustomEvent<PlayerChange>) => {
     if (player.team == 0) {
       this.emit('playerInactive', player)
       this.activePlayers.delete(player.id)
@@ -367,7 +410,7 @@ export class Instance {
     }
   }
 
-  private handlePlayerChat(event: CustomEvent<PlayerChat>) {
+  private handlePlayerChat = (event: CustomEvent<PlayerChat>) => {
     let {player, message} = event.detail;
     message = message.trim();
     if(message[0] == '!') {
@@ -375,7 +418,7 @@ export class Instance {
       const commandName = firstSpaceIndex == -1 ? message : message.substr(0, firstSpaceIndex);
       const callback = this.commands.get(commandName)
       if (callback) {
-        callback(player, message)
+        callback.apply(this, [player, message])
       } else {
         const response = `"${commandName}" not recognized command`
         this.room.sendAnnouncement(response, player.id, 0xFF0000, "bold", 2);

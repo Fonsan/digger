@@ -8,7 +8,7 @@ export class OnePlayer extends Plugin<PluginConfig> {
     this.on('playerLeave', this.removePlayer);
   }
 
-  private removePlayer({detail: player}:CustomEvent<WLPlayer>) {
+  private removePlayer = ({detail: player}:CustomEvent<WLPlayer>) => {
     this.idToAuth.delete(player.id)
     const auth = this.idToAuth.get(player.id)
     if (auth) {
@@ -16,7 +16,7 @@ export class OnePlayer extends Plugin<PluginConfig> {
     }
   }
 
-  private addPlayer({detail: player}:CustomEvent<WLJoiningPlayer>):void {
+  private addPlayer = ({detail: player}:CustomEvent<WLJoiningPlayer>) => {
     this.idToAuth.set(player.id, player.auth)
     const existingPlayer = this.playingPlayers.get(player.auth)
     if (existingPlayer) {
