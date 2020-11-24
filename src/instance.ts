@@ -1,7 +1,7 @@
-import {DeepNonNullable} from "ts-essentials"
+import { DeepNonNullable } from "ts-essentials"
 import merge from "ts-deepmerge";
-import {Election} from './election'
-import {PluginConfig} from './plugins/plugin'
+import { Election } from './election'
+import { PluginConfig } from './plugins/plugin'
 
 import { Admin, AdminConfig } from './plugins/admin'
 import { AFK, AFKConfig } from './plugins/afk'

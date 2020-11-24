@@ -1,1 +1,1052 @@
-!function(){"use strict";var t={905:function(t,e){var n=function(t){if("object"==typeof t&&null!==t){if("function"==typeof Object.getPrototypeOf){var e=Object.getPrototypeOf(t);return e===Object.prototype||null===e}return"[object Object]"===Object.prototype.toString.call(t)}return!1},o=function(){for(var t=[],e=0;e<arguments.length;e++)t[e]=arguments[e];return t.reduce((function(t,e){return Object.keys(e).forEach((function(i){Array.isArray(t[i])&&Array.isArray(e[i])?t[i]=Array.from(new Set(t[i].concat(e[i]))):n(t[i])&&n(e[i])?t[i]=o(t[i],e[i]):t[i]=e[i]})),t}),{})};e.Z=o},122:function(t,e,n){n.d(e,{K:function(){return I}});var o,i,r=n(905),a=function(){function t(t,e,n,o){var i=this;this.votes=new Map,this.ended=!1,this.instance=t,this.callback=o;var r=this.instance.playerIdToAuth.get(n.id);this.votes.set(r,"y"),this.voteCommandHandler=this.instance.registerCommand(["!y","!n"],"",this.handleVote),this.instance.on("playerLeave",this.reCount),this.instance.on("playerJoin",this.reCount),this.timeout=window.setTimeout((function(){i.instance.notify("Vote: "+e+" failed"),i.end()}),this.instance.config.voteTime),this.instance.notify("Vote: "+e+" started, vote with !y or !n, current "),this.reCount()}return t.prototype.handleVote=function(t,e){var n=this.instance.playerIdToAuth.get(t.id);this.votes.get(n)?this.instance.error("You have already voted in this election, you may be interested in !stopthecount",t.id):(this.votes.set(n,e[1]),this.reCount())},t.prototype.reCount=function(){var t=Object.keys(this.instance.playerIdToAuth).length,e=2==t?2:t/2,n=Array.from(this.votes.values()).reduce((function(t,e){return t[e]+=1,t}),{y:0,n:0}),o="Vote: "+name+", "+n.y+"/"+t+" in favour, "+n.n+"/"+t+" against. ";n.y>=e?(this.instance.notify(o+"Moving ahead with "+name),this.end(),this.callback()):n.n>=e||n.n+n.y==t?(this.instance.notify(o+"Dismissed "+name),this.end()):this.instance.notify(o+", participate using !y or !n")},t.prototype.end=function(){this.ended||(this.ended=!0,this.instance.currentElection=void 0,this.voteCommandHandler(),this.instance.off("playerLeave",this.reCount),this.instance.off("playerJoin",this.reCount),clearTimeout(this.timeout))},t}(),s=function(){function t(t,e){this.listeners=[],this.commandHandlers=[],t.log(this.constructor.name+" loaded"),this.instance=t,this.config=e,e.enabled&&(this.enable(),t.log(this.constructor.name+" enabled with "+JSON.stringify(e)))}return t.prototype.disable=function(){var t=this;this.instance.log(this.constructor.name+" disabled"),this.listeners.forEach((function(e){var n=e.name,o=e.listener;t.instance.off(n,o)})),this.commandHandlers.forEach((function(t){return t()}))},t.prototype.on=function(t,e){this.listeners.push({name:t,listener:e}),this.instance.on(t,e)},t.prototype.registerCommand=function(t,e,n){var o=this.instance.registerCommand(t,e,n);return this.commandHandlers.push(o),o},t}(),c=(o=function(t,e){return(o=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(t,e)},function(t,e){function n(){this.constructor=t}o(t,e),t.prototype=null===e?Object.create(e):(n.prototype=e.prototype,new n)}),u=function(t){function e(e,n){var o=t.call(this,e,n)||this;return o.auths=new Set(n.auths),o}return c(e,t),e.prototype.enable=function(){var t=this;this.on("playerJoin",this.handleJoin),this.registerCommand(["!a"],"Admin: !a s[kip] | r[estart] | d[efcon6] | m[ute] t | u[nmute] t | k[ick] t | b[an] t | c[ban] t",(function(e,n){if(e.admin){var o=n.replace(/ +/," ").split(" ");if(2==o.length)switch(o[1][0]){case"s":t.instance.room.endGame();case"r":t.instance.room.restartGame();case"d":t.instance.error("Not yet implemented",e.id);default:return t.respondWithUsage(e.id)}else if(o.length>=3){var i=t.instance.findPlayer(o[2]);if(!i)return void t.instance.notify("Could not find targetPlayer: "+o[2]+", use !list",e.id);switch(o[2][0]){case"m":t.mute(e,i);case"u":t.unMute(e,i);case"k":t.instance.room.kickPlayer(i.id,"You have been kicked "+o[3],!1);case"b":t.instance.temporaryBan(i,"You have been kicked for "+Math.round(t.config.kickDuration/1e3/60)+" minutes "+o[3],t.config.kickDuration);case"c":t.instance.room.clearBan(i.id);default:return t.respondWithUsage(e.id)}}else t.respondWithUsage(e.id)}else t.instance.error("Not admin",e.id)}))},e.prototype.mute=function(t,e){var n=this.config.muteDuration/1e3/60;this.instance.notify(e.name+" has been muted for "+n+' minutes, use "!a unmute '+this.instance.shortId(e.id)+'" to unmute'),this.instance.mute(e.id,this.config.muteDuration)},e.prototype.unMute=function(t,e){this.instance.notify(e.name+" has been ungagged"),this.instance.unMute(e.id)},e.prototype.respondWithUsage=function(t){this.instance.notify("Usage:",t),this.instance.notify("!a s or !a skip",t),this.instance.notify("!a r or !a restart",t),this.instance.notify("!a d or !a defcon6",t),this.instance.notify("!a m 123 or !a mute 123",t),this.instance.notify("!a u 123 or !a unmute 123",t),this.instance.notify("!a k 123 or !a kick 123",t),this.instance.notify("!a b 123 or !a ban 123",t),this.instance.notify("!a c 123 or !a cban 123",t)},e.prototype.handleJoin=function(t){var e=t.detail;this.auths.has(e.auth)&&this.instance.room.setPlayerAdmin(e.id,!0)},e}(s),l=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){function o(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(o.prototype=n.prototype,new o)}}(),p=function(t){function e(e,n){var o=t.call(this,e,n)||this;return o.playingPlayers=new Map,o.hotPlayers=new Map,o.kickCandidates=new Map,o.timeout=n.timeout,o.graceTime=n.graceTime,o.hotTimeout=n.hotTimeout,o.warnTimeout=o.timeout-o.graceTime,o}return l(e,t),e.prototype.enable=function(){this.on("playerJoin",this.handleMotd),this.config.kickAFKSpectatorWhenFull&&this.on("playerJoin",this.purgeInactiveSpectators),this.on("playerTeamChange",this.handleTeamChange),this.on("playerActivity",this.activate),this.on("playerLeave",this.handleLeave)},e.prototype.handleMotd=function(t){var e=t.detail,n="AFK detection loaded, players are moved to spectators after "+this.timeout/1e3+" seconds of inactivity";this.instance.notify(n,e.id)},e.prototype.handleTeamChange=function(t){var e=t.detail,n=e.player;e.byPlayer,n.team==I.spectatorTeam?this.clearPlayerTimeout(n.id):(this.kickCandidates.delete(n.id),this.resetPlayerTimeout(n.id))},e.prototype.handleLeave=function(t){var e=t.detail;this.kickCandidates.delete(e.id),this.clearPlayerTimeout(e.id)},e.prototype.activate=function(t){var e=this,n=t.detail;this.hotPlayers.get(n.id)||(this.hotPlayers.set(n.id,window.setTimeout((function(){return e.hotPlayers.delete(n.id)}),this.hotTimeout)),this.playingPlayers.get(n.id)&&this.resetPlayerTimeout(n.id))},e.prototype.resetPlayerTimeout=function(t){var e=this;this.clearPlayerTimeout(t),this.playingPlayers.set(t,window.setTimeout((function(){return e.evictPlayer(t)}),this.warnTimeout))},e.prototype.clearPlayerTimeout=function(t){var e=this.playingPlayers.get(t);e&&clearTimeout(e),this.playingPlayers.delete(t)},e.prototype.evictPlayer=function(t){var e=this,n="You will be moved to spectators due too inactivity in "+this.graceTime/1e3+" seconds, please move";this.instance.notify(n,t);var o=this.playingPlayers.get(t);setTimeout((function(){var n=e.instance.room.getPlayer(t);if(n&&n.team!=I.spectatorTeam&&e.playingPlayers.get(t)==o){e.instance.softNotify("Moving "+n.name+" to spectators due to inactivity");var i="You were afk for more than "+e.timeout/1e3+" seconds, moving you to spectators";e.instance.error(i,t),e.instance.room.setPlayerTeam(t,0),e.kickCandidates.set(t,new Date)}}),this.graceTime)},e.prototype.purgeInactiveSpectators=function(t){if(t.detail,this.instance.room.getPlayerList().length>=this.instance.initOptions.maxPlayers){var e=Array.from(this.kickCandidates).reduce((function(t,e){return t[1]<e[1]?t:e}));if(e){var n=this.instance.room.getPlayer(e[0]);this.instance.softNotify("Server full, kicking oldest afk spectator "+n.name),this.instance.room.kickPlayer(e[0],"Server full, kicking oldest afk spectator",!1)}}},e}(s),h=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){function o(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(o.prototype=n.prototype,new o)}}(),f=function(t){function e(){var e=null!==t&&t.apply(this,arguments)||this;return e.aliases=new Map,e}return h(e,t),e.prototype.enable=function(){var t=this;this.on("playerJoin",this.handleJoin),this.registerCommand(["!a","!aliases"],"Check the previously known aliases of a player",(function(e,n){var o=n.split(" ");if(o.length<2)t.instance.error("Usage: !a 123 or !a playerName",e.id);else{var i=o[o.length-1],r=t.instance.findPlayer(i);if(!r)return t.instance.error("Could not find player",e.id),void t.instance.error("Usage: !a 123 or !aliases playerName",e.id);var a=t.instance.playerIdToAuth.get(r.id);t.instance.notify(r.name+" previously known names:",e.id),t.namesByLastUsed(a).forEach((function(n){var o=n[0],i=n[1];if(o!=r.name){var a=new Date;t.instance.notify(o+" "+(+a-+i)/1e3/60/60+" hours ago",e.id)}}))}})),this.config.announceNameChange&&this.on("changePlayerName",this.handleChangeName)},e.prototype.handleChangeName=function(t){var e=this,n=t.detail,o=this.namesByLastUsed(n.auth).slice(0,this.config.annouceNamesCount);this.instance.room.getPlayerList().forEach((function(t){e.instance.playerIdToAuth.get(t.id)!=n.auth&&(e.instance.notify(n.name+" changed their name, last "+o.length+" previously known names:",t.id),o.forEach((function(n){var o=n[0];return n[1],e.instance.notify(o,t.id)})))}))},e.prototype.namesByLastUsed=function(t){var e=this.aliases.get(t);return Array.from(e).sort((function(t,e){return e[1].getTime()-t[1].getTime()}))},e.prototype.handleJoin=function(t){var e=t.detail,n=this.aliases.get(e.auth);n?(n.get(e.name)&&this.instance.emit("changePlayerName",e),n.set(e.name,new Date)):(this.aliases.set(e.auth,new Map),this.instance.emit("newPlayer",e))},e}(s),y=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){function o(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(o.prototype=n.prototype,new o)}}(),d=function(t){function e(){var e=null!==t&&t.apply(this,arguments)||this;return e.connectionMap=new Map,e.playerIdToConn=new Map,e}return y(e,t),e.prototype.enable=function(){this.on("playerJoin",this.addPlayer),this.on("playerLeave",this.removePlayer)},e.prototype.addPlayer=function(t){var e=t.detail;this.playerIdToConn.set(e.id,e.conn);var n=this.connectionMap.get(e.conn);if(n){if(n.size>=this.config.maxConnectionsPerIP){var o=Array.from(n).reduce((function(t,e){return t[1]<e[1]?t:e}));this.instance.room.kickPlayer(o[0],"Too many connections",!1),n.delete(o[0])}n.set(e.id,new Date)}else this.connectionMap.set(e.conn,new Map([[e.id,new Date]]))},e.prototype.removePlayer=function(t){var e=t.detail,n=this.playerIdToConn.get(e.id);this.connectionMap.get(n).delete(e.id),this.playerIdToConn.delete(e.id)},e}(s),m=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){function o(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(o.prototype=n.prototype,new o)}}(),g=function(t){function e(){return null!==t&&t.apply(this,arguments)||this}return m(e,t),e.prototype.enable=function(){var t=this;this.registerCommand(["!l","!list"],"List the players showing an id and name",(function(e,n){t.instance.notify("Players: id, name",e.id),t.instance.room.getPlayerList().forEach((function(n){t.instance.notify(t.instance.shortId(n.id)+"\t"+n.name,e.id)}))}))},e}(s),v=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){function o(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(o.prototype=n.prototype,new o)}}(),P=function(t){function e(){var e=null!==t&&t.apply(this,arguments)||this;return e.playingPlayers=new Map,e.idToAuth=new Map,e}return v(e,t),e.prototype.enable=function(){this.on("playerJoin",this.addPlayer),this.on("playerLeave",this.removePlayer)},e.prototype.removePlayer=function(t){var e=t.detail;this.idToAuth.delete(e.id);var n=this.idToAuth.get(e.id);n&&this.playingPlayers.delete(n)},e.prototype.addPlayer=function(t){var e=t.detail;this.idToAuth.set(e.id,e.auth);var n=this.playingPlayers.get(e.auth);n&&this.instance.room.kickPlayer(n.id,"Only one connection allowed",!1),this.playingPlayers.set(e.auth,e)},e}(s),b=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){function o(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(o.prototype=n.prototype,new o)}}(),w=function(t){function e(){return null!==t&&t.apply(this,arguments)||this}return b(e,t),e.prototype.enable=function(){this.on("gameEnd",this.handleGameEnd)},e.prototype.handleGameEnd=function(){var t=this,e=this.instance.room.getPlayerList(),n=new Map,o=Array();if(e.forEach((function(e){n.set(e.team,!0);var i=t.instance.room.getPlayerScore(e.id);i&&o.push({player:e,score:i})})),this.instance.emit("playerScores",o),"tdm"==this.instance.room.getSettings().gameMode){var i=Array();Object.keys(n).map((function(e){var n=parseInt(e,10);if(n>0){var o=t.instance.room.getTeamScore(n);i.push({team:n,score:o})}})),this.instance.emit("teamScores",i)}},e}(s),k=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){function o(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(o.prototype=n.prototype,new o)}}(),_=function(t){function e(){return null!==t&&t.apply(this,arguments)||this}return k(e,t),e.prototype.enable=function(){var t=this;this.config.url&&(this.webSocket=new WebSocket(this.config.url)),this.config.events.forEach((function(e){t.on(e,t.publish)})),this.on("gameStart",this.handleGameStart)},e.prototype.handleGameStart=function(t){this.publish(new CustomEvent("GameSettings",{detail:this.instance.room.getSettings()}))},e.prototype.publish=function(t){var e={time:Date.now(),event:t.type};void 0!==t.detail&&(e.detail=t.detail),this.webSocket&&this.webSocket.readyState==WebSocket.OPEN&&this.webSocket.send(JSON.stringify(e)),this.instance.log(e)},e}(s),T=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){function o(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(o.prototype=n.prototype,new o)}}(),O=function(t){function e(){return null!==t&&t.apply(this,arguments)||this}return T(e,t),e.prototype.enable=function(){var t=this,e=this.config.muteDuration/1e3/60;this.registerCommand(["!vm","!votemute"],"Mute player vote, type !vm for Usage",(function(n,o){var i=o.split(" ");if(i.length<2)t.instance.error("Usage: !vm 123 or !vm playerName",n.id);else{var r=i[i.length-1],a=t.instance.findPlayer(r);if(!a)return t.instance.error("Could not find player",n.id),void t.instance.error("Usage: !vm 123 or !vm playerName",n.id);t.instance.election("Mute "+a.name,n,(function(){t.instance.mute(a.id,t.config.muteDuration),t.instance.notify(a.name+" has been muted for "+e+" minutes")}))}}))},e}(s),C=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){function o(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(o.prototype=n.prototype,new o)}}(),A=function(t){function e(){return null!==t&&t.apply(this,arguments)||this}return C(e,t),e.prototype.enable=function(){var t=this,e=Math.round(this.config.kickDuration/1e3/60);this.registerCommand(["!vk","!votekick"],"Kick player vote, type !vk for Usage",(function(n,o){var i=o.split(" ");if(i.length<2)t.instance.error("Usage: !vk 123 or !vk playerName",n.id);else{var r=i[i.length-1],a=t.instance.findPlayer(r);if(!a)return t.instance.error("Could not find player",n.id),void t.instance.error("Usage: !vk 123 or !vk playerName",n.id);t.instance.election("Kick "+a.name+" for "+e+" minutes",n,(function(){t.instance.temporaryBan(a,"Vote kick",t.config.kickDuration)}))}}))},e}(s),S=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){function o(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(o.prototype=n.prototype,new o)}}(),M=function(t){function e(){return null!==t&&t.apply(this,arguments)||this}return S(e,t),e.prototype.enable=function(){var t=this;this.registerCommand(["!vr","!voterestart"],"Restart map vote",(function(e,n){t.instance.election("Skip map",e,(function(){t.instance.room.restartGame(),t.instance.notify("Game restarted")}))}))},e}(s),j=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){function o(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(o.prototype=n.prototype,new o)}}(),E=function(t){function e(){return null!==t&&t.apply(this,arguments)||this}return j(e,t),e.prototype.enable=function(){var t=this;this.registerCommand(["!vs","!voteskip"],"Skip map vote",(function(e,n){t.instance.election("Skip map",e,(function(){return t.instance.room.endGame()}))}))},e}(s);!function(t){t[t.captcha=0]="captcha",t[t.changePlayerName=1]="changePlayerName",t[t.gameEnd=2]="gameEnd",t[t.gameEnd2=3]="gameEnd2",t[t.gameStart=4]="gameStart",t[t.gameTick=5]="gameTick",t[t.newPlayer=6]="newPlayer",t[t.playerActive=7]="playerActive",t[t.playerActivity=8]="playerActivity",t[t.playerAdminChange=9]="playerAdminChange",t[t.playerChat=10]="playerChat",t[t.playerInactive=11]="playerInactive",t[t.playerJoin=12]="playerJoin",t[t.playerKicked=13]="playerKicked",t[t.playerKilled=14]="playerKilled",t[t.playerLeave=15]="playerLeave",t[t.playerScores=16]="playerScores",t[t.playerTeamChange=17]="playerTeamChange",t[t.roomLink=18]="roomLink",t[t.teamScores=19]="teamScores"}(i||(i={}));var I=function(){function t(e,n,o,i){var a,s=this;if(this.commands=new Map,this.commandDescriptions=new Map,this.playerIdToAuth=new Map,this.mutedPlayers=new Map,this.activePlayers=new Map,this.electionTimeouts=new Map,this.window=e,this.config=i,this.initialSettings=o,this.config=(0,r.Z)(t.defaultConfig,i),e.onWLLoaded)throw"already loaded";if(!((a=n).roomName&&a.maxPlayers&&void 0!==a.public&&a.token))throw"roomName, maxPlayers, public and token must be set";if(this.config.configVersion!=t.configVersion)throw"Your config is out of date and not compatible with latest digger, check https://gitlab.com/webliero/digger";this.initOptions=n,this.validateInitOptions(),this.fullRoom=e.WLInit(n),this.room=this.fullRoom,this.room.setSettings(o),this.serverId=this.initOptions.roomName.replace(/[^A-Z0-9]/gi,"-").toLowerCase(),this.instanceId=Date.now().toString(36)+"#"+Math.round(Math.random()*Math.pow(36,3)).toString(36),this.setNewGame(),this.eventTarget=new EventTarget,this.registerRoomCallbacks(),this.on("gameStart",(function(t){s.setNewGame()})),this.on("playerJoin",(function(t){var e=t.detail;return s.playerIdToAuth.set(e.id,e.auth)})),this.on("playerLeave",(function(t){var e=t.detail;return s.playerIdToAuth.delete(e.id)})),this.on("playerChat",this.handlePlayerChat),this.on("playerTeamChange",this.handleActive),this.on("roomLink",(function(t){return t.detail,s.log("Started: `${url}`")})),this.on("captcha",(function(){return s.log("Failed to start: Faulty token")})),this.on("playerJoin",(function(e){var n=e.detail;return s.notify(t.motd,n.id)})),this.registerCommand(["!h","!help"],"Display this help",this.handleHelp),this.registerCommand(["!stc","!stopthecount"],"Request to stop the count of a vote",this.handleStopTheCount),this.enablePlugins()}return t.prototype.log=function(){for(var t=[],e=0;e<arguments.length;e++)t[e]=arguments[e];console.log.apply(console,t.map((function(t){return JSON.stringify(t)})))},t.prototype.on=function(t,e){this.eventTarget.addEventListener(t,e)},t.prototype.once=function(t,e){this.eventTarget.addEventListener(t,e,{once:!0})},t.prototype.off=function(t,e){this.eventTarget.removeEventListener(t,e)},t.prototype.emit=function(t,e){return this.eventTarget.dispatchEvent(new CustomEvent(t,{detail:e,cancelable:!0}))},t.prototype.notify=function(t,e){this.room.sendAnnouncement(t,e,16776960,"bold",2)},t.prototype.softNotify=function(t,e){this.room.sendAnnouncement(t,e,14540253)},t.prototype.error=function(t,e){this.room.sendAnnouncement(t,e,16711680,"bold",2)},t.prototype.registerCommand=function(t,e,n){var o=this;return this.commandDescriptions.set(t[0],function(){for(var t=0,e=0,n=arguments.length;e<n;e++)t+=arguments[e].length;var o=Array(t),i=0;for(e=0;e<n;e++)for(var r=arguments[e],a=0,s=r.length;a<s;a++,i++)o[i]=r[a];return o}(t.map((function(t){return t.padEnd(4," ")})),[e]).join(" ")),t.forEach((function(t){if("!"!=t[0]||t.length<2)throw t+" command not valid";if(o.commands.get(t))throw"command already registered";o.commands.set(t,n)})),function(){o.commandDescriptions.delete(t[0]),t.forEach((function(t){return o.commands.delete(t)}))}},t.prototype.findPlayer=function(t){var e=this,n=this.room.getPlayerList();return n.find((function(n){return e.shortId(n.id).toString()==t}))||n.find((function(e){return e.name==t}))},t.prototype.mute=function(t,e){var n=this,o=Math.round(e/1e3/60);this.error("You have been muted for "+o+" minutes",t);var i=this.playerIdToAuth.get(t);this.mutedPlayers.set(i,{time:new Date(Date.now()+e),timeout:window.setTimeout((function(){return n.unMute(t)}),e)})},t.prototype.temporaryBan=function(t,e,n){var o=this,i=Math.round(n/1e3/60);this.room.kickPlayer(t.id,e,!0),this.notify(t.name+" has been kicked for "+i+" minutes"),setTimeout((function(){return o.room.clearBan(t.id)}),n)},t.prototype.unMute=function(t){this.error("You have been unmuted",t);var e=this.playerIdToAuth.get(t);this.mutedPlayers.delete(e)},t.prototype.clearMutes=function(){this.mutedPlayers.clear()},t.prototype.shortId=function(t){return t%1e3},t.prototype.election=function(t,e,n){var o=this,i=this.playerIdToAuth.get(e.id);this.electionTimeouts.get(i)?this.error("You may only start a vote once every "+this.config.voteTimeout/1e3+" seconds",e.id):this.currentElection?this.notify("Another vote is already active, wait your turn",e.id):(this.electionTimeouts.set(i,window.setTimeout((function(){return o.electionTimeouts.delete(i)}),this.config.voteTimeout)),this.currentElection=new a(this,t,e,(function(){o.currentElection=void 0,n()})))},t.prototype.enablePlugins=function(){var t=this;Object.entries(this.config.plugins).forEach((function(e){var n=e[0];if(e[1].enabled)switch(n){case"admin":new u(t,t.config.plugins.admin);case"afk":new p(t,t.config.plugins.afk);case"aliases":new f(t,t.config.plugins.aliases);case"connection":new d(t,t.config.plugins.connection);case"list":new g(t,t.config.plugins.list);case"onePlayer":new P(t,t.config.plugins.onePlayer);case"scores":new w(t,t.config.plugins.scores);case"slurper":new _(t,t.config.plugins.slurper);case"voteMutePlayer":new O(t,t.config.plugins.voteMutePlayer);case"voteKickPlayer":new A(t,t.config.plugins.voteKickPlayer);case"voteRestartMap":new M(t,t.config.plugins.voteRestartMap);case"voteSkipMap":new E(t,t.config.plugins.voteSkipMap)}}))},t.prototype.handleHelp=function(t,e){var n=this;this.notify("Available commands:",t.id),Array.from(this.commandDescriptions.values()).sort().filter((function(e){return t.admin||!("!a"==e.substr(0,2))})).forEach((function(e){return n.notify(e,t.id)}))},t.prototype.handleActive=function(t){var e=t.detail,n=e.player;e.byPlayer,0==n.team?(this.emit("playerInactive",n),this.activePlayers.delete(n.id)):this.activePlayers.get(n.id)||(this.emit("playerActive",n),this.activePlayers.set(n.id,!0))},t.prototype.handlePlayerChat=function(t){var e=t.detail,n=e.player,o=e.message;if("!"==(o=o.trim())[0]){var i=o.indexOf(" "),r=-1==i?o:o.substr(0,i),a=this.commands.get(r);if(a)a(n,o);else{var s='"'+r+'" not recognized command';this.room.sendAnnouncement(s,n.id,16711680,"bold",2)}t.preventDefault()}var c=this.playerIdToAuth.get(n.id),u=this.mutedPlayers.get(c);if(u){var l=Math.round((u.time.getTime()-Date.now())/1e3/60);this.room.sendAnnouncement("You are muted for "+l+" minutes more",n.id,16711680,"bold",2),t.preventDefault()}},t.prototype.setNewGame=function(){this.gameStartTime=new Date,this.gameId=Date.now().toString(36)+"#"+Math.round(Math.random()*Math.pow(36,3)).toString(36)},t.prototype.handleStopTheCount=function(t,e){this.currentElection?this.notify(t.name+" has requested to stop the count, we of course ignore it and the counting of votes will continue"):this.notify(t.name+" has requested to stop the count, the vote is over and we ignore it")},t.prototype.registerRoomCallbacks=function(){var t=this;this.fullRoom.onPlayerJoin=function(e){t.emit("playerJoin",e)},this.fullRoom.onPlayerLeave=function(e){t.emit("playerLeave",e)},this.fullRoom.onPlayerKicked=function(e,n,o,i){t.emit("playerKicked",{player:e,reason:n,ban:o,byPlayer:i})},this.fullRoom.onPlayerChat=function(e,n){return t.emit("playerChat",{player:e,message:n})},this.fullRoom.onPlayerTeamChange=function(e,n){t.emit("playerTeamChange",{player:e,byPlayer:n})},this.fullRoom.onPlayerAdminChange=function(e,n){t.emit("playerAdminChange",{player:e,byPlayer:n})},this.fullRoom.onGameTick=function(){t.emit("gameTick",null)},this.fullRoom.onPlayerActivity=function(e){t.emit("playerActivity",e)},this.fullRoom.onRoomLink=function(e){t.emit("roomLink",e)},this.fullRoom.onGameStart=function(){t.emit("gameStart",null)},this.fullRoom.onGameEnd=function(){t.emit("gameEnd",null)},this.fullRoom.onGameEnd2=function(){t.emit("gameEnd2",null)},this.fullRoom.onPlayerKilled=function(e,n){t.emit("playerKilled",{killed:e,killer:n})},this.fullRoom.onCaptcha=function(){t.emit("captcha",null)}},t.prototype.validateInitOptions=function(){if(!this.initOptions.roomName)throw"you must set a roomName";if(!this.initOptions.maxPlayers)throw"you must set maxPlayers"},t.prototype.generateId=function(){return Date.now().toString(36)+"#"+Math.round(Math.random()*Math.pow(36,3)).toString(36)},t.configVersion="0.1.0",t.spectatorTeam=0,t.motd="Digger "+t.configVersion+" loaded, write !h or !help in chat for commands",t.defaultConfig={configVersion:t.configVersion,voteTime:3e4,voteTimeout:45e3,plugins:{admin:{enabled:!0,auths:[],muteDuration:9e5,kickDuration:9e5},afk:{enabled:!0,timeout:6e4,graceTime:1e4,hotTimeout:3e3,kickAFKSpectatorWhenFull:!0},aliases:{enabled:!0,announceNameChange:!0,annouceNamesCount:4},connection:{enabled:!0,maxConnectionsPerIP:3},list:{enabled:!0},onePlayer:{enabled:!0},scores:{enabled:!0},slurper:{enabled:!0,events:["captcha","changePlayerName","gameEnd","gameEnd2","gameStart","newPlayer","playerActive","playerAdminChange","playerChat","playerInactive","playerJoin","playerKicked","playerKilled","playerLeave","playerScores","playerTeamChange","roomLink","teamScores"]},voteMutePlayer:{enabled:!0,muteDuration:9e5},voteKickPlayer:{enabled:!0,kickDuration:9e5},voteRestartMap:{enabled:!0},voteSkipMap:{enabled:!0}}},t}()}},e={};function n(o){if(e[o])return e[o].exports;var i=e[o]={exports:{}};return t[o](i,i.exports,n),i.exports}n.d=function(t,e){for(var o in e)n.o(e,o)&&!n.o(t,o)&&Object.defineProperty(t,o,{enumerable:!0,get:e[o]})},n.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},n(122)}();
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise */
+
+var extendStatics = function(d, b) {
+    extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return extendStatics(d, b);
+};
+
+function __extends(d, b) {
+    extendStatics(d, b);
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+}
+
+function __spreadArrays() {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+}
+
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
+
+function createCommonjsModule(fn, basedir, module) {
+	return module = {
+		path: basedir,
+		exports: {},
+		require: function (path, base) {
+			return commonjsRequire(path, (base === undefined || base === null) ? module.path : base);
+		}
+	}, fn(module, module.exports), module.exports;
+}
+
+function commonjsRequire () {
+	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
+}
+
+var dist = createCommonjsModule(function (module, exports) {
+Object.defineProperty(exports, "__esModule", { value: true });
+// istanbul ignore next
+var isObject = function (obj) {
+    if (typeof obj === "object" && obj !== null) {
+        if (typeof Object.getPrototypeOf === "function") {
+            var prototype = Object.getPrototypeOf(obj);
+            return prototype === Object.prototype || prototype === null;
+        }
+        return Object.prototype.toString.call(obj) === "[object Object]";
+    }
+    return false;
+};
+var merge = function () {
+    var objects = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        objects[_i] = arguments[_i];
+    }
+    return objects.reduce(function (result, current) {
+        Object.keys(current).forEach(function (key) {
+            if (Array.isArray(result[key]) && Array.isArray(current[key])) {
+                result[key] = Array.from(new Set(result[key].concat(current[key])));
+            }
+            else if (isObject(result[key]) && isObject(current[key])) {
+                result[key] = merge(result[key], current[key]);
+            }
+            else {
+                result[key] = current[key];
+            }
+        });
+        return result;
+    }, {});
+};
+exports.default = merge;
+
+});
+
+var merge = /*@__PURE__*/getDefaultExportFromCjs(dist);
+
+var Election = /** @class */ (function () {
+    function Election(instance, name, initiatingPlayer, callback) {
+        var _this = this;
+        this.votes = new Map();
+        this.ended = false;
+        this.instance = instance;
+        this.callback = callback;
+        var auth = this.instance.playerIdToAuth.get(initiatingPlayer.id);
+        this.votes.set(auth, 'y');
+        this.voteCommandHandler = this.instance.registerCommand(['!y', '!n'], '', this.handleVote);
+        this.instance.on('playerLeave', this.reCount);
+        this.instance.on('playerJoin', this.reCount);
+        this.timeout = window.setTimeout(function () {
+            _this.instance.notify("Vote: " + name + " failed");
+            _this.end();
+        }, this.instance.config.voteTime);
+        this.instance.notify("Vote: " + name + " started, vote with !y or !n, current ");
+        this.reCount();
+    }
+    Election.prototype.handleVote = function (player, message) {
+        var playerAuth = this.instance.playerIdToAuth.get(player.id);
+        if (this.votes.get(playerAuth)) {
+            this.instance.error("You have already voted in this election, you may be interested in !stopthecount", player.id);
+        }
+        else {
+            this.votes.set(playerAuth, message[1]);
+            this.reCount();
+        }
+    };
+    Election.prototype.reCount = function () {
+        var playerCount = Object.keys(this.instance.playerIdToAuth).length;
+        var neededVotes = playerCount == 2 ? 2 : playerCount / 2;
+        var voteCounts = Array.from(this.votes.values()).reduce(function (acc, vote) { acc[vote] += 1; return acc; }, { y: 0, n: 0 });
+        var prefix = "Vote: " + name + ", " + voteCounts.y + "/" + playerCount + " in favour, " + voteCounts.n + "/" + playerCount + " against. ";
+        if (voteCounts.y >= neededVotes) {
+            this.instance.notify(prefix + "Moving ahead with " + name);
+            this.end();
+            this.callback();
+        }
+        else if (voteCounts.n >= neededVotes || voteCounts.n + voteCounts.y == playerCount) {
+            this.instance.notify(prefix + "Dismissed " + name);
+            this.end();
+        }
+        else {
+            this.instance.notify(prefix + ", participate using !y or !n");
+        }
+    };
+    Election.prototype.end = function () {
+        if (this.ended) {
+            return;
+        }
+        this.ended = true;
+        this.instance.currentElection = undefined;
+        this.voteCommandHandler();
+        this.instance.off('playerLeave', this.reCount);
+        this.instance.off('playerJoin', this.reCount);
+        clearTimeout(this.timeout);
+    };
+    return Election;
+}());
+
+var Plugin = /** @class */ (function () {
+    function Plugin(instance, config) {
+        this.listeners = [];
+        this.commandHandlers = [];
+        instance.log(this.constructor.name + " loaded");
+        this.instance = instance;
+        this.config = config;
+        if (config.enabled) {
+            this.enable();
+            instance.log(this.constructor.name + " enabled with " + JSON.stringify(config));
+        }
+    }
+    Plugin.prototype.disable = function () {
+        var _this = this;
+        this.instance.log(this.constructor.name + " disabled");
+        this.listeners.forEach(function (_a) {
+            var name = _a.name, listener = _a.listener;
+            _this.instance.off(name, listener);
+        });
+        this.commandHandlers.forEach(function (handler) { return handler(); });
+    };
+    Plugin.prototype.on = function (name, listener) {
+        this.listeners.push({ name: name, listener: listener });
+        this.instance.on(name, listener);
+    };
+    Plugin.prototype.registerCommand = function (commands, description, callback) {
+        var handler = this.instance.registerCommand(commands, description, callback);
+        this.commandHandlers.push(handler);
+        return handler;
+    };
+    return Plugin;
+}());
+
+var Admin = /** @class */ (function (_super) {
+    __extends(Admin, _super);
+    function Admin(instance, config) {
+        var _this = _super.call(this, instance, config) || this;
+        _this.auths = new Set(config.auths);
+        return _this;
+    }
+    Admin.prototype.enable = function () {
+        var _this = this;
+        this.on('playerJoin', this.handleJoin);
+        this.registerCommand(['!a'], 'Admin: !a s[kip] | r[estart] | d[efcon6] | m[ute] t | u[nmute] t | k[ick] t | b[an] t | c[ban] t', function (player, message) {
+            if (!player.admin) {
+                _this.instance.error('Not admin', player.id);
+                return;
+            }
+            var parts = message.replace(/ +/, ' ').split(' ');
+            if (parts.length == 2) {
+                switch (parts[1][0]) {
+                    case 's': _this.instance.room.endGame();
+                    case 'r': _this.instance.room.restartGame();
+                    case 'd': _this.instance.error('Not yet implemented', player.id);
+                    default: return _this.respondWithUsage(player.id);
+                }
+            }
+            else if (parts.length >= 3) {
+                var targetPlayer = _this.instance.findPlayer(parts[2]);
+                if (!targetPlayer) {
+                    _this.instance.notify("Could not find targetPlayer: " + parts[2] + ", use !list", player.id);
+                    return;
+                }
+                switch (parts[2][0]) {
+                    case 'm': _this.mute(player, targetPlayer);
+                    case 'u': _this.unMute(player, targetPlayer);
+                    case 'k': _this.instance.room.kickPlayer(targetPlayer.id, "You have been kicked " + parts[3], false);
+                    case 'b': _this.instance.temporaryBan(targetPlayer, "You have been kicked for " + Math.round(_this.config.kickDuration / 1000 / 60) + " minutes " + parts[3], _this.config.kickDuration);
+                    case 'c': _this.instance.room.clearBan(targetPlayer.id);
+                    default: return _this.respondWithUsage(player.id);
+                }
+            }
+            else {
+                _this.respondWithUsage(player.id);
+            }
+        });
+    };
+    Admin.prototype.mute = function (admin, targetPlayer) {
+        var minutes = this.config.muteDuration / 1000 / 60;
+        this.instance.notify(targetPlayer.name + " has been muted for " + minutes + " minutes, use \"!a unmute " + this.instance.shortId(targetPlayer.id) + "\" to unmute");
+        this.instance.mute(targetPlayer.id, this.config.muteDuration);
+    };
+    Admin.prototype.unMute = function (admin, targetPlayer) {
+        this.instance.notify(targetPlayer.name + " has been ungagged");
+        this.instance.unMute(targetPlayer.id);
+    };
+    Admin.prototype.respondWithUsage = function (playerId) {
+        this.instance.notify("Usage:", playerId);
+        this.instance.notify("!a s or !a skip", playerId);
+        this.instance.notify("!a r or !a restart", playerId);
+        this.instance.notify("!a d or !a defcon6", playerId);
+        this.instance.notify("!a m 123 or !a mute 123", playerId);
+        this.instance.notify("!a u 123 or !a unmute 123", playerId);
+        this.instance.notify("!a k 123 or !a kick 123", playerId);
+        this.instance.notify("!a b 123 or !a ban 123", playerId);
+        this.instance.notify("!a c 123 or !a cban 123", playerId);
+    };
+    Admin.prototype.handleJoin = function (_a) {
+        var player = _a.detail;
+        if (this.auths.has(player.auth)) {
+            this.instance.room.setPlayerAdmin(player.id, true);
+        }
+    };
+    return Admin;
+}(Plugin));
+
+var AFK = /** @class */ (function (_super) {
+    __extends(AFK, _super);
+    function AFK(instance, config) {
+        var _this = _super.call(this, instance, config) || this;
+        _this.playingPlayers = new Map();
+        _this.hotPlayers = new Map();
+        _this.kickCandidates = new Map();
+        _this.timeout = config.timeout;
+        _this.graceTime = config.graceTime;
+        _this.hotTimeout = config.hotTimeout;
+        _this.warnTimeout = _this.timeout - _this.graceTime;
+        return _this;
+    }
+    AFK.prototype.enable = function () {
+        this.on('playerJoin', this.handleMotd);
+        if (this.config.kickAFKSpectatorWhenFull) {
+            this.on('playerJoin', this.purgeInactiveSpectators);
+        }
+        this.on('playerTeamChange', this.handleTeamChange);
+        this.on('playerActivity', this.activate);
+        this.on('playerLeave', this.handleLeave);
+    };
+    AFK.prototype.handleMotd = function (_a) {
+        var player = _a.detail;
+        var motd = "AFK detection loaded, players are moved to spectators after " + this.timeout / 1000 + " seconds of inactivity";
+        this.instance.notify(motd, player.id);
+    };
+    AFK.prototype.handleTeamChange = function (_a) {
+        var _b = _a.detail, player = _b.player, byPlayer = _b.byPlayer;
+        if (player.team == Instance.spectatorTeam) {
+            this.clearPlayerTimeout(player.id);
+        }
+        else {
+            this.kickCandidates.delete(player.id);
+            this.resetPlayerTimeout(player.id);
+        }
+    };
+    AFK.prototype.handleLeave = function (_a) {
+        var player = _a.detail;
+        this.kickCandidates.delete(player.id);
+        this.clearPlayerTimeout(player.id);
+    };
+    AFK.prototype.activate = function (_a) {
+        var _this = this;
+        var player = _a.detail;
+        if (!this.hotPlayers.get(player.id)) {
+            this.hotPlayers.set(player.id, window.setTimeout(function () { return _this.hotPlayers.delete(player.id); }, this.hotTimeout));
+            if (this.playingPlayers.get(player.id)) {
+                this.resetPlayerTimeout(player.id);
+            }
+        }
+    };
+    AFK.prototype.resetPlayerTimeout = function (playerId) {
+        var _this = this;
+        this.clearPlayerTimeout(playerId);
+        this.playingPlayers.set(playerId, window.setTimeout(function () { return _this.evictPlayer(playerId); }, this.warnTimeout));
+    };
+    AFK.prototype.clearPlayerTimeout = function (playerId) {
+        var timeout = this.playingPlayers.get(playerId);
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        this.playingPlayers.delete(playerId);
+    };
+    AFK.prototype.evictPlayer = function (playerId) {
+        var _this = this;
+        var message = "You will be moved to spectators due too inactivity in " + this.graceTime / 1000 + " seconds, please move";
+        this.instance.notify(message, playerId);
+        var currentTimeout = this.playingPlayers.get(playerId);
+        setTimeout(function () {
+            var player = _this.instance.room.getPlayer(playerId);
+            if (player && player.team != Instance.spectatorTeam && _this.playingPlayers.get(playerId) == currentTimeout) {
+                _this.instance.softNotify("Moving " + player.name + " to spectators due to inactivity");
+                var reason = "You were afk for more than " + _this.timeout / 1000 + " seconds, moving you to spectators";
+                _this.instance.error(reason, playerId);
+                _this.instance.room.setPlayerTeam(playerId, 0);
+                _this.kickCandidates.set(playerId, new Date());
+            }
+        }, this.graceTime);
+    };
+    AFK.prototype.purgeInactiveSpectators = function (_a) {
+        var player = _a.detail;
+        var list = this.instance.room.getPlayerList();
+        if (list.length >= this.instance.initOptions.maxPlayers) {
+            var oldestPlayerPair = Array.from(this.kickCandidates).reduce(function (acc, el) { return acc[1] < el[1] ? acc : el; });
+            if (oldestPlayerPair) {
+                var oldestPlayer = this.instance.room.getPlayer(oldestPlayerPair[0]);
+                this.instance.softNotify("Server full, kicking oldest afk spectator " + oldestPlayer.name);
+                this.instance.room.kickPlayer(oldestPlayerPair[0], 'Server full, kicking oldest afk spectator', false);
+            }
+        }
+    };
+    return AFK;
+}(Plugin));
+
+var Aliases = /** @class */ (function (_super) {
+    __extends(Aliases, _super);
+    function Aliases() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.aliases = new Map();
+        return _this;
+    }
+    Aliases.prototype.enable = function () {
+        var _this = this;
+        this.on('playerJoin', this.handleJoin);
+        this.registerCommand(['!a', '!aliases'], 'Check the previously known aliases of a player', function (player, message) {
+            var parts = message.split(' ');
+            if (parts.length < 2) {
+                _this.instance.error("Usage: !a 123 or !a playerName", player.id);
+                return;
+            }
+            var lastPart = parts[parts.length - 1];
+            var targetPlayer = _this.instance.findPlayer(lastPart);
+            if (!targetPlayer) {
+                _this.instance.error("Could not find player", player.id);
+                _this.instance.error("Usage: !a 123 or !aliases playerName", player.id);
+                return;
+            }
+            var auth = _this.instance.playerIdToAuth.get(targetPlayer.id);
+            _this.instance.notify(targetPlayer.name + " previously known names:", player.id);
+            _this.namesByLastUsed(auth).forEach(function (_a) {
+                var name = _a[0], time = _a[1];
+                if (name != targetPlayer.name) {
+                    var currentTime = new Date();
+                    _this.instance.notify(name + " " + (+currentTime - +time) / 1000 / 60 / 60 + " hours ago", player.id);
+                }
+            });
+        });
+        if (this.config.announceNameChange) {
+            this.on('changePlayerName', this.handleChangeName);
+        }
+    };
+    Aliases.prototype.handleChangeName = function (_a) {
+        var _this = this;
+        var player = _a.detail;
+        var names = this.namesByLastUsed(player.auth).slice(0, this.config.annouceNamesCount);
+        this.instance.room.getPlayerList().forEach(function (otherPlayer) {
+            if (_this.instance.playerIdToAuth.get(otherPlayer.id) != player.auth) {
+                _this.instance.notify(player.name + " changed their name, last " + names.length + " previously known names:", otherPlayer.id);
+                names.forEach(function (_a) {
+                    var name = _a[0], date = _a[1];
+                    return _this.instance.notify(name, otherPlayer.id);
+                });
+            }
+        });
+    };
+    Aliases.prototype.namesByLastUsed = function (auth) {
+        var names = this.aliases.get(auth);
+        return Array.from(names).sort(function (a, b) { return b[1].getTime() - a[1].getTime(); });
+    };
+    Aliases.prototype.handleJoin = function (_a) {
+        var player = _a.detail;
+        var prev = this.aliases.get(player.auth);
+        if (prev) {
+            if (prev.get(player.name)) {
+                this.instance.emit('changePlayerName', player);
+            }
+            prev.set(player.name, new Date());
+        }
+        else {
+            this.aliases.set(player.auth, new Map());
+            this.instance.emit('newPlayer', player);
+        }
+    };
+    return Aliases;
+}(Plugin));
+
+var Connection = /** @class */ (function (_super) {
+    __extends(Connection, _super);
+    function Connection() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.connectionMap = new Map();
+        _this.playerIdToConn = new Map();
+        return _this;
+    }
+    Connection.prototype.enable = function () {
+        this.on('playerJoin', this.addPlayer);
+        this.on('playerLeave', this.removePlayer);
+    };
+    Connection.prototype.addPlayer = function (_a) {
+        var player = _a.detail;
+        this.playerIdToConn.set(player.id, player.conn);
+        var connectionPlayers = this.connectionMap.get(player.conn);
+        if (connectionPlayers) {
+            if (connectionPlayers.size >= this.config.maxConnectionsPerIP) {
+                var playerPair = Array.from(connectionPlayers).reduce(function (acc, el) { return acc[1] < el[1] ? acc : el; });
+                this.instance.room.kickPlayer(playerPair[0], 'Too many connections', false);
+                connectionPlayers.delete(playerPair[0]);
+            }
+            connectionPlayers.set(player.id, new Date());
+        }
+        else {
+            this.connectionMap.set(player.conn, new Map([[player.id, new Date()]]));
+        }
+    };
+    Connection.prototype.removePlayer = function (_a) {
+        var player = _a.detail;
+        var conn = this.playerIdToConn.get(player.id);
+        var connectionPlayers = this.connectionMap.get(conn);
+        connectionPlayers.delete(player.id);
+        this.playerIdToConn.delete(player.id);
+    };
+    return Connection;
+}(Plugin));
+
+var List = /** @class */ (function (_super) {
+    __extends(List, _super);
+    function List() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    List.prototype.enable = function () {
+        var _this = this;
+        this.registerCommand(['!l', '!list'], 'List the players showing an id and name', function (commandPlayer, message) {
+            _this.instance.notify('Players: id, name', commandPlayer.id);
+            _this.instance.room.getPlayerList().forEach(function (player) {
+                _this.instance.notify(_this.instance.shortId(player.id) + "\t" + player.name, commandPlayer.id);
+            });
+        });
+    };
+    return List;
+}(Plugin));
+
+var OnePlayer = /** @class */ (function (_super) {
+    __extends(OnePlayer, _super);
+    function OnePlayer() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.playingPlayers = new Map();
+        _this.idToAuth = new Map();
+        return _this;
+    }
+    OnePlayer.prototype.enable = function () {
+        this.on('playerJoin', this.addPlayer);
+        this.on('playerLeave', this.removePlayer);
+    };
+    OnePlayer.prototype.removePlayer = function (_a) {
+        var player = _a.detail;
+        this.idToAuth.delete(player.id);
+        var auth = this.idToAuth.get(player.id);
+        if (auth) {
+            this.playingPlayers.delete(auth);
+        }
+    };
+    OnePlayer.prototype.addPlayer = function (_a) {
+        var player = _a.detail;
+        this.idToAuth.set(player.id, player.auth);
+        var existingPlayer = this.playingPlayers.get(player.auth);
+        if (existingPlayer) {
+            this.instance.room.kickPlayer(existingPlayer.id, 'Only one connection allowed', false);
+        }
+        this.playingPlayers.set(player.auth, player);
+    };
+    return OnePlayer;
+}(Plugin));
+
+var Scores = /** @class */ (function (_super) {
+    __extends(Scores, _super);
+    function Scores() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Scores.prototype.enable = function () {
+        this.on('gameEnd', this.handleGameEnd);
+    };
+    Scores.prototype.handleGameEnd = function () {
+        var _this = this;
+        var players = this.instance.room.getPlayerList();
+        var teams = new Map();
+        var playerScores = Array();
+        players.forEach(function (player) {
+            teams.set(player.team, true);
+            var score = _this.instance.room.getPlayerScore(player.id);
+            if (score) {
+                playerScores.push({
+                    player: player,
+                    score: score
+                });
+            }
+        });
+        this.instance.emit('playerScores', playerScores);
+        if (this.instance.room.getSettings().gameMode == 'tdm') {
+            var teamScores_1 = Array();
+            Object.keys(teams).map(function (teamIdstring) {
+                var teamId = parseInt(teamIdstring, 10);
+                if (teamId > 0) {
+                    var teamScore = _this.instance.room.getTeamScore(teamId);
+                    teamScores_1.push({ team: teamId, score: teamScore });
+                }
+            });
+            this.instance.emit('teamScores', teamScores_1);
+        }
+    };
+    return Scores;
+}(Plugin));
+
+var Slurper = /** @class */ (function (_super) {
+    __extends(Slurper, _super);
+    function Slurper() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Slurper.prototype.enable = function () {
+        var _this = this;
+        if (this.config.url) {
+            this.webSocket = new WebSocket(this.config.url);
+        }
+        this.config.events.forEach(function (eventName) {
+            _this.on(eventName, _this.publish);
+        });
+        this.on('gameStart', this.handleGameStart);
+    };
+    Slurper.prototype.handleGameStart = function (event) {
+        this.publish(new CustomEvent('GameSettings', { detail: this.instance.room.getSettings() }));
+    };
+    Slurper.prototype.publish = function (event) {
+        var message = {
+            time: Date.now(),
+            event: event.type,
+        };
+        if (event.detail !== undefined) {
+            message.detail = event.detail;
+        }
+        if (this.webSocket && this.webSocket.readyState == WebSocket.OPEN) {
+            this.webSocket.send(JSON.stringify(message));
+        }
+        this.instance.log(message);
+    };
+    return Slurper;
+}(Plugin));
+
+var VoteMute = /** @class */ (function (_super) {
+    __extends(VoteMute, _super);
+    function VoteMute() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    VoteMute.prototype.enable = function () {
+        var _this = this;
+        var minutes = this.config.muteDuration / 1000 / 60;
+        this.registerCommand(['!vm', '!votemute'], 'Mute player vote, type !vm for Usage', function (player, message) {
+            var parts = message.split(' ');
+            if (parts.length < 2) {
+                _this.instance.error("Usage: !vm 123 or !vm playerName", player.id);
+                return;
+            }
+            var lastPart = parts[parts.length - 1];
+            var targetPlayer = _this.instance.findPlayer(lastPart);
+            if (!targetPlayer) {
+                _this.instance.error("Could not find player", player.id);
+                _this.instance.error("Usage: !vm 123 or !vm playerName", player.id);
+                return;
+            }
+            _this.instance.election("Mute " + targetPlayer.name, player, function () {
+                _this.instance.mute(targetPlayer.id, _this.config.muteDuration);
+                _this.instance.notify(targetPlayer.name + " has been muted for " + minutes + " minutes");
+            });
+        });
+    };
+    return VoteMute;
+}(Plugin));
+
+var VoteKick = /** @class */ (function (_super) {
+    __extends(VoteKick, _super);
+    function VoteKick() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    VoteKick.prototype.enable = function () {
+        var _this = this;
+        var minutes = Math.round(this.config.kickDuration / 1000 / 60);
+        this.registerCommand(['!vk', '!votekick'], 'Kick player vote, type !vk for Usage', function (player, message) {
+            var parts = message.split(' ');
+            if (parts.length < 2) {
+                _this.instance.error("Usage: !vk 123 or !vk playerName", player.id);
+                return;
+            }
+            var lastPart = parts[parts.length - 1];
+            var targetPlayer = _this.instance.findPlayer(lastPart);
+            if (!targetPlayer) {
+                _this.instance.error("Could not find player", player.id);
+                _this.instance.error("Usage: !vk 123 or !vk playerName", player.id);
+                return;
+            }
+            _this.instance.election("Kick " + targetPlayer.name + " for " + minutes + " minutes", player, function () {
+                _this.instance.temporaryBan(targetPlayer, "Vote kick", _this.config.kickDuration);
+            });
+        });
+    };
+    return VoteKick;
+}(Plugin));
+
+var VoteRestartMap = /** @class */ (function (_super) {
+    __extends(VoteRestartMap, _super);
+    function VoteRestartMap() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    VoteRestartMap.prototype.enable = function () {
+        var _this = this;
+        this.registerCommand(['!vr', '!voterestart'], 'Restart map vote', function (player, message) {
+            _this.instance.election('Skip map', player, function () {
+                _this.instance.room.restartGame();
+                _this.instance.notify('Game restarted');
+            });
+        });
+    };
+    return VoteRestartMap;
+}(Plugin));
+
+var VoteSkipMap = /** @class */ (function (_super) {
+    __extends(VoteSkipMap, _super);
+    function VoteSkipMap() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    VoteSkipMap.prototype.enable = function () {
+        var _this = this;
+        this.registerCommand(['!vs', '!voteskip'], 'Skip map vote', function (player, message) {
+            _this.instance.election('Skip map', player, function () { return _this.instance.room.endGame(); });
+        });
+    };
+    return VoteSkipMap;
+}(Plugin));
+
+var EventEnum;
+(function (EventEnum) {
+    EventEnum[EventEnum["captcha"] = 0] = "captcha";
+    EventEnum[EventEnum["changePlayerName"] = 1] = "changePlayerName";
+    EventEnum[EventEnum["gameEnd"] = 2] = "gameEnd";
+    EventEnum[EventEnum["gameEnd2"] = 3] = "gameEnd2";
+    EventEnum[EventEnum["gameStart"] = 4] = "gameStart";
+    EventEnum[EventEnum["gameTick"] = 5] = "gameTick";
+    EventEnum[EventEnum["newPlayer"] = 6] = "newPlayer";
+    EventEnum[EventEnum["playerActive"] = 7] = "playerActive";
+    EventEnum[EventEnum["playerActivity"] = 8] = "playerActivity";
+    EventEnum[EventEnum["playerAdminChange"] = 9] = "playerAdminChange";
+    EventEnum[EventEnum["playerChat"] = 10] = "playerChat";
+    EventEnum[EventEnum["playerInactive"] = 11] = "playerInactive";
+    EventEnum[EventEnum["playerJoin"] = 12] = "playerJoin";
+    EventEnum[EventEnum["playerKicked"] = 13] = "playerKicked";
+    EventEnum[EventEnum["playerKilled"] = 14] = "playerKilled";
+    EventEnum[EventEnum["playerLeave"] = 15] = "playerLeave";
+    EventEnum[EventEnum["playerScores"] = 16] = "playerScores";
+    EventEnum[EventEnum["playerTeamChange"] = 17] = "playerTeamChange";
+    EventEnum[EventEnum["roomLink"] = 18] = "roomLink";
+    EventEnum[EventEnum["teamScores"] = 19] = "teamScores";
+})(EventEnum || (EventEnum = {}));
+function isStrictInitOptions(options) {
+    var so = options;
+    return !!so.roomName && !!so.maxPlayers && so.public !== undefined && !!so.token;
+}
+var Instance = /** @class */ (function () {
+    function Instance(window, initOptions, initialSettings, config) {
+        var _this = this;
+        this.commands = new Map();
+        this.commandDescriptions = new Map();
+        this.playerIdToAuth = new Map();
+        this.mutedPlayers = new Map();
+        this.activePlayers = new Map();
+        this.electionTimeouts = new Map();
+        this.window = window;
+        this.config = config;
+        this.initialSettings = initialSettings;
+        this.config = merge(Instance.defaultConfig, config);
+        if (window.onWLLoaded) {
+            throw 'already loaded';
+        }
+        if (!isStrictInitOptions(initOptions)) {
+            throw 'roomName, maxPlayers, public and token must be set';
+        }
+        if (this.config.configVersion != Instance.configVersion) {
+            throw "Your config is out of date and not compatible with latest digger, check https://gitlab.com/webliero/digger";
+        }
+        this.initOptions = initOptions;
+        this.validateInitOptions();
+        this.fullRoom = window.WLInit(initOptions);
+        this.room = this.fullRoom;
+        this.room.setSettings(initialSettings);
+        this.serverId = this.initOptions.roomName.replace(/[^A-Z0-9]/gi, '-').toLowerCase();
+        this.instanceId = Date.now().toString(36) + "#" + Math.round(Math.random() * Math.pow(36, 3)).toString(36);
+        this.setNewGame();
+        this.eventTarget = new EventTarget();
+        this.registerRoomCallbacks();
+        this.on('gameStart', function (e) { _this.setNewGame(); });
+        this.on('playerJoin', function (_a) {
+            var player = _a.detail;
+            return _this.playerIdToAuth.set(player.id, player.auth);
+        });
+        this.on('playerLeave', function (_a) {
+            var player = _a.detail;
+            return _this.playerIdToAuth.delete(player.id);
+        });
+        this.on('playerChat', this.handlePlayerChat);
+        this.on('playerTeamChange', this.handleActive);
+        this.on('roomLink', function (_a) {
+            var url = _a.detail;
+            return _this.log("Started: `${url}`");
+        });
+        this.on('captcha', function () { return _this.log('Failed to start: Faulty token'); });
+        this.on('playerJoin', function (_a) {
+            var player = _a.detail;
+            return _this.notify(Instance.motd, player.id);
+        });
+        this.registerCommand(['!h', '!help'], 'Display this help', this.handleHelp);
+        this.registerCommand(['!stc', '!stopthecount'], 'Request to stop the count of a vote', this.handleStopTheCount);
+        this.enablePlugins();
+    }
+    Instance.prototype.log = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        console.log.apply(console, args.map(function (x) { return JSON.stringify(x); }));
+    };
+    Instance.prototype.on = function (name, listener) {
+        this.eventTarget.addEventListener(name, listener);
+    };
+    Instance.prototype.once = function (name, listener) {
+        this.eventTarget.addEventListener(name, listener, { once: true });
+    };
+    Instance.prototype.off = function (name, listener) {
+        this.eventTarget.removeEventListener(name, listener);
+    };
+    Instance.prototype.emit = function (name, detail) {
+        return this.eventTarget.dispatchEvent(new CustomEvent(name, { detail: detail, cancelable: true }));
+    };
+    Instance.prototype.notify = function (message, target) {
+        this.room.sendAnnouncement(message, target, 0xFFFF00, "bold", 2);
+    };
+    Instance.prototype.softNotify = function (message, target) {
+        this.room.sendAnnouncement(message, target, 0xDDDDDD);
+    };
+    Instance.prototype.error = function (message, target) {
+        this.room.sendAnnouncement(message, target, 0xFF0000, "bold", 2);
+    };
+    Instance.prototype.registerCommand = function (names, description, callback) {
+        var _this = this;
+        this.commandDescriptions.set(names[0], __spreadArrays(names.map(function (name) { return name.padEnd(4, ' '); }), [description]).join(" "));
+        names.forEach(function (name) {
+            if (name[0] != '!' || name.length < 2) {
+                throw name + " command not valid";
+            }
+            if (_this.commands.get(name)) {
+                throw 'command already registered';
+            }
+            _this.commands.set(name, callback);
+        });
+        return function () {
+            _this.commandDescriptions.delete(names[0]);
+            names.forEach(function (name) { return _this.commands.delete(name); });
+        };
+    };
+    Instance.prototype.findPlayer = function (token) {
+        var _this = this;
+        var players = this.room.getPlayerList();
+        var playerById = players.find(function (player) { return _this.shortId(player.id).toString() == token; });
+        return playerById || players.find(function (player) { return player.name == token; });
+    };
+    Instance.prototype.mute = function (playerId, duration) {
+        var _this = this;
+        var minutes = Math.round(duration / 1000 / 60);
+        this.error("You have been muted for " + minutes + " minutes", playerId);
+        var auth = this.playerIdToAuth.get(playerId);
+        this.mutedPlayers.set(auth, {
+            time: new Date(Date.now() + duration),
+            timeout: window.setTimeout(function () { return _this.unMute(playerId); }, duration)
+        });
+    };
+    Instance.prototype.temporaryBan = function (player, reason, duration) {
+        var _this = this;
+        var minutes = Math.round(duration / 1000 / 60);
+        this.room.kickPlayer(player.id, reason, true);
+        this.notify(player.name + " has been kicked for " + minutes + " minutes");
+        setTimeout(function () { return _this.room.clearBan(player.id); }, duration);
+    };
+    Instance.prototype.unMute = function (playerId) {
+        this.error("You have been unmuted", playerId);
+        var auth = this.playerIdToAuth.get(playerId);
+        this.mutedPlayers.delete(auth);
+    };
+    Instance.prototype.clearMutes = function () {
+        this.mutedPlayers.clear();
+    };
+    Instance.prototype.shortId = function (playerId) {
+        return playerId % 1000;
+    };
+    Instance.prototype.election = function (name, player, callback) {
+        var _this = this;
+        var auth = this.playerIdToAuth.get(player.id);
+        if (this.electionTimeouts.get(auth)) {
+            this.error("You may only start a vote once every " + this.config.voteTimeout / 1000 + " seconds", player.id);
+            return;
+        }
+        if (this.currentElection) {
+            this.notify("Another vote is already active, wait your turn", player.id);
+            return;
+        }
+        this.electionTimeouts.set(auth, window.setTimeout(function () { return _this.electionTimeouts.delete(auth); }, this.config.voteTimeout));
+        this.currentElection = new Election(this, name, player, function () {
+            _this.currentElection = undefined;
+            callback();
+        });
+    };
+    Instance.prototype.enablePlugins = function () {
+        var _this = this;
+        Object.entries(this.config.plugins).forEach(function (_a) {
+            var name = _a[0], pluginConfig = _a[1];
+            if (pluginConfig.enabled) {
+                switch (name) {
+                    case 'admin':
+                        new Admin(_this, _this.config.plugins.admin);
+                    case 'afk':
+                        new AFK(_this, _this.config.plugins.afk);
+                    case 'aliases':
+                        new Aliases(_this, _this.config.plugins.aliases);
+                    case 'connection':
+                        new Connection(_this, _this.config.plugins.connection);
+                    case 'list':
+                        new List(_this, _this.config.plugins.list);
+                    case 'onePlayer':
+                        new OnePlayer(_this, _this.config.plugins.onePlayer);
+                    case 'scores':
+                        new Scores(_this, _this.config.plugins.scores);
+                    case 'slurper':
+                        new Slurper(_this, _this.config.plugins.slurper);
+                    case 'voteMutePlayer':
+                        new VoteMute(_this, _this.config.plugins.voteMutePlayer);
+                    case 'voteKickPlayer':
+                        new VoteKick(_this, _this.config.plugins.voteKickPlayer);
+                    case 'voteRestartMap':
+                        new VoteRestartMap(_this, _this.config.plugins.voteRestartMap);
+                    case 'voteSkipMap':
+                        new VoteSkipMap(_this, _this.config.plugins.voteSkipMap);
+                }
+            }
+        });
+    };
+    Instance.prototype.handleHelp = function (player, message) {
+        var _this = this;
+        this.notify("Available commands:", player.id);
+        var commands = Array.from(this.commandDescriptions.values()).sort();
+        commands.filter(function (command) { return player.admin || !(command.substr(0, 2) == '!a'); })
+            .forEach(function (command) { return _this.notify(command, player.id); });
+    };
+    Instance.prototype.handleActive = function (_a) {
+        var _b = _a.detail, player = _b.player, byPlayer = _b.byPlayer;
+        if (player.team == 0) {
+            this.emit('playerInactive', player);
+            this.activePlayers.delete(player.id);
+        }
+        else {
+            if (!this.activePlayers.get(player.id)) {
+                this.emit('playerActive', player);
+                this.activePlayers.set(player.id, true);
+            }
+        }
+    };
+    Instance.prototype.handlePlayerChat = function (event) {
+        var _a = event.detail, player = _a.player, message = _a.message;
+        message = message.trim();
+        if (message[0] == '!') {
+            var firstSpaceIndex = message.indexOf(' ');
+            var commandName = firstSpaceIndex == -1 ? message : message.substr(0, firstSpaceIndex);
+            var callback = this.commands.get(commandName);
+            if (callback) {
+                callback(player, message);
+            }
+            else {
+                var response = "\"" + commandName + "\" not recognized command";
+                this.room.sendAnnouncement(response, player.id, 0xFF0000, "bold", 2);
+            }
+            event.preventDefault();
+        }
+        var auth = this.playerIdToAuth.get(player.id);
+        var muteConfig = this.mutedPlayers.get(auth);
+        if (muteConfig) {
+            var minutes = Math.round((muteConfig.time.getTime() - Date.now()) / 1000 / 60);
+            this.room.sendAnnouncement("You are muted for " + minutes + " minutes more", player.id, 0xFF0000, "bold", 2);
+            event.preventDefault();
+        }
+    };
+    Instance.prototype.setNewGame = function () {
+        this.gameStartTime = new Date();
+        this.gameId = Date.now().toString(36) + "#" + Math.round(Math.random() * Math.pow(36, 3)).toString(36);
+    };
+    Instance.prototype.handleStopTheCount = function (player, message) {
+        if (this.currentElection) {
+            this.notify(player.name + " has requested to stop the count, we of course ignore it and the counting of votes will continue");
+        }
+        else {
+            this.notify(player.name + " has requested to stop the count, the vote is over and we ignore it");
+        }
+    };
+    Instance.prototype.registerRoomCallbacks = function () {
+        var _this = this;
+        this.fullRoom.onPlayerJoin = function (player) { _this.emit('playerJoin', player); };
+        this.fullRoom.onPlayerLeave = function (player) { _this.emit('playerLeave', player); };
+        this.fullRoom.onPlayerKicked = function (player, reason, ban, byPlayer) {
+            _this.emit('playerKicked', { player: player, reason: reason, ban: ban, byPlayer: byPlayer });
+        };
+        this.fullRoom.onPlayerChat = function (player, message) { return _this.emit('playerChat', { player: player, message: message }); };
+        this.fullRoom.onPlayerTeamChange = function (player, byPlayer) { _this.emit('playerTeamChange', { player: player, byPlayer: byPlayer }); };
+        this.fullRoom.onPlayerAdminChange = function (player, byPlayer) { _this.emit('playerAdminChange', { player: player, byPlayer: byPlayer }); };
+        this.fullRoom.onGameTick = function () { _this.emit('gameTick', null); };
+        this.fullRoom.onPlayerActivity = function (player) { _this.emit('playerActivity', player); };
+        this.fullRoom.onRoomLink = function (link) { _this.emit('roomLink', link); };
+        this.fullRoom.onGameStart = function () { _this.emit('gameStart', null); };
+        this.fullRoom.onGameEnd = function () { _this.emit('gameEnd', null); };
+        this.fullRoom.onGameEnd2 = function () { _this.emit('gameEnd2', null); };
+        this.fullRoom.onPlayerKilled = function (killed, killer) { _this.emit('playerKilled', { killed: killed, killer: killer }); };
+        this.fullRoom.onCaptcha = function () { _this.emit('captcha', null); };
+    };
+    Instance.prototype.validateInitOptions = function () {
+        if (!this.initOptions.roomName) {
+            throw 'you must set a roomName';
+        }
+        if (!this.initOptions.maxPlayers) {
+            throw 'you must set maxPlayers';
+        }
+    };
+    Instance.prototype.generateId = function () {
+        return Date.now().toString(36) + "#" + Math.round(Math.random() * Math.pow(36, 3)).toString(36);
+    };
+    Instance.configVersion = '0.1.0';
+    Instance.spectatorTeam = 0;
+    Instance.motd = "Digger " + Instance.configVersion + " loaded, write !h or !help in chat for commands";
+    Instance.defaultConfig = {
+        configVersion: Instance.configVersion,
+        voteTime: 30000,
+        voteTimeout: 45000,
+        plugins: {
+            admin: {
+                enabled: true,
+                auths: [],
+                muteDuration: 15 * 60 * 1000,
+                kickDuration: 15 * 60 * 1000
+            },
+            afk: {
+                enabled: true,
+                timeout: 60000,
+                graceTime: 10000,
+                hotTimeout: 3000,
+                kickAFKSpectatorWhenFull: true
+            },
+            aliases: {
+                enabled: true,
+                announceNameChange: true,
+                annouceNamesCount: 4
+            },
+            connection: {
+                enabled: true,
+                maxConnectionsPerIP: 3
+            },
+            list: { enabled: true },
+            onePlayer: { enabled: true },
+            scores: { enabled: true },
+            slurper: {
+                enabled: true,
+                events: [
+                    'captcha',
+                    'changePlayerName',
+                    'gameEnd',
+                    'gameEnd2',
+                    'gameStart',
+                    // 'gameTick', // Disabled for performance reasons
+                    'newPlayer',
+                    'playerActive',
+                    // 'playerActivity', // Disabled for performance reasons
+                    'playerAdminChange',
+                    'playerChat',
+                    'playerInactive',
+                    'playerJoin',
+                    'playerKicked',
+                    'playerKilled',
+                    'playerLeave',
+                    'playerScores',
+                    'playerTeamChange',
+                    'roomLink',
+                    'teamScores',
+                ]
+            },
+            voteMutePlayer: {
+                enabled: true,
+                muteDuration: 15 * 60 * 1000
+            },
+            voteKickPlayer: {
+                enabled: true,
+                kickDuration: 15 * 60 * 1000
+            },
+            voteRestartMap: { enabled: true },
+            voteSkipMap: { enabled: true }
+        }
+    };
+    return Instance;
+}());
+
+export { Instance };
+//# sourceMappingURL=digger.js.map
