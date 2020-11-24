@@ -448,22 +448,23 @@ export class Instance extends EventTarget {
   }
 
   private registerRoomCallbacks():void {
-    this.fullRoom.onPlayerJoin = (player : WLJoiningPlayer) => { this.emit('playerJoin', player)}
-    this.fullRoom.onPlayerLeave = (player : WLPlayer) => { this.emit('playerLeave', player)}
-    this.fullRoom.onPlayerKicked = (player : WLPlayer, reason : string, ban : boolean, byPlayer : WLPlayer) => {
-      this.emit('playerKicked', {player, reason, ban, byPlayer})
-    }
-    this.fullRoom.onPlayerChat = (player : WLPlayer, message : string) => { return this.emit('playerChat', {player, message}) }
-    this.fullRoom.onPlayerTeamChange = (player : WLPlayer, byPlayer : WLPlayer) => { this.emit('playerTeamChange', {player, byPlayer})}
-    this.fullRoom.onPlayerAdminChange = (player : WLPlayer, byPlayer : WLPlayer) => { this.emit('playerAdminChange', {player, byPlayer})}
-    this.fullRoom.onGameTick = () => { this.emit('gameTick', null)}
-    this.fullRoom.onPlayerActivity = (player : WLPlayer) => { this.emit('playerActivity', player)}
-    this.fullRoom.onRoomLink = (link: string) => { this.emit('roomLink', link)}
-    this.fullRoom.onGameStart = () => { this.emit('gameStart', null)}
-    this.fullRoom.onGameEnd = () => { this.emit('gameEnd', null)}
-    this.fullRoom.onGameEnd2 = () => { this.emit('gameEnd2', null)}
-    this.fullRoom.onPlayerKilled = (killed : WLPlayer, killer : WLPlayer) => { this.emit('playerKilled', {killed, killer})}
-    this.fullRoom.onCaptcha = () => { this.emit('captcha', null)}
+    this.log(this.fullRoom)
+    this.fullRoom.onPlayerJoin = (player : WLJoiningPlayer) => this.emit('playerJoin', player)
+    this.fullRoom.onPlayerLeave = (player : WLPlayer) => this.emit('playerLeave', player)
+    this.fullRoom.onPlayerKicked = (
+        player : WLPlayer, reason : string, ban : boolean, byPlayer : WLPlayer
+      ) => this.emit('playerKicked', {player, reason, ban, byPlayer})
+    this.fullRoom.onPlayerChat = (player : WLPlayer, message : string) => this.emit('playerChat', {player, message})
+    this.fullRoom.onPlayerTeamChange = (player : WLPlayer, byPlayer : WLPlayer) => this.emit('playerTeamChange', {player, byPlayer})
+    this.fullRoom.onPlayerAdminChange = (player : WLPlayer, byPlayer : WLPlayer) => this.emit('playerAdminChange', {player, byPlayer})
+    this.fullRoom.onGameTick = () => this.emit('gameTick', null)
+    this.fullRoom.onPlayerActivity = (player : WLPlayer) => this.emit('playerActivity', player)
+    this.fullRoom.onRoomLink = (link: string) => this.emit('roomLink', link)
+    this.fullRoom.onGameStart = () => this.emit('gameStart', null)
+    this.fullRoom.onGameEnd = () => this.emit('gameEnd', null)
+    this.fullRoom.onGameEnd2 = () => this.emit('gameEnd2', null)
+    this.fullRoom.onPlayerKilled = (killed : WLPlayer, killer : WLPlayer) => this.emit('playerKilled', {killed, killer})
+    this.fullRoom.onCaptcha = () => this.emit('captcha', null)
   }
 
   private validateInitOptions() {
