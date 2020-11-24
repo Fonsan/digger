@@ -20,6 +20,7 @@ export interface Config {
   configVersion: string;
   voteTime: number;
   voteTimeout: number;
+  onGameEnd2?: Function,
   plugins: {
     admin: AdminConfig,
     afk: AFKConfig,
@@ -81,7 +82,7 @@ export class Instance extends EventTarget {
   initOptions: StrictInitOptions;
   eventTarget: CustomEventTarget;
   currentElection?: Election;
-  public readonly room: WLMinimalRoom;
+  public room: WLMinimalRoom;
   public readonly serverId: string;
   public readonly instanceId: string;
   public gameId!: string;
@@ -168,25 +169,19 @@ export class Instance extends EventTarget {
   constructor(window: Window, initOptions: WLInitOptions, initialSettings: WLGameSettings, config: DeepNonNullable<Config>) {
     super();
     this.window = window
-    this.config = config;
     this.initialSettings = initialSettings;
+    if (config.configVersion != Instance.configVersion) {
+      throw `Your config is out of date and not compatible with latest digger, check https://gitlab.com/webliero/digger`
+    }
     this.config = merge(Instance.defaultConfig, config)
     if (!isStrictInitOptions(initOptions)) {
       throw 'roomName, maxPlayers, public and token must be set'
     }
-    if (this.config.configVersion != Instance.configVersion) {
-      throw `Your config is out of date and not compatible with latest digger, check https://gitlab.com/webliero/digger`
-    }
     this.initOptions = initOptions;
-    this.validateInitOptions()
-    this.fullRoom = window.WLInit(initOptions);
-    this.room = this.fullRoom as WLMinimalRoom;
-    this.room.setSettings(initialSettings);
     this.serverId = this.initOptions.roomName.replace(/[^A-Z0-9]/gi, '-').toLowerCase()
     this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
-    this.setNewGame();
     this.eventTarget = (this as CustomEventTarget);
-    this.registerRoomCallbacks()
+    this.setNewGame();
     this.on('gameStart', (e) => { this.setNewGame() })
     this.on('playerJoin', ({detail: player}:CustomEvent<WLJoiningPlayer>) => this.playerIdToAuth.set(player.id, player.auth))
     this.on('playerLeave', ({detail: player}) => this.playerIdToAuth.delete(player.id))
@@ -197,8 +192,18 @@ export class Instance extends EventTarget {
     this.on('playerJoin', ({detail: player}: CustomEvent<WLJoiningPlayer>) => this.notify(Instance.motd, player.id))
     this.registerCommand(['!h', '!help'], 'Display this help', this.handleHelp)
     this.registerCommand(['!stc', '!stopthecount'], 'Request to stop the count of a vote', this.handleStopTheCount)
+    this.room = {} as WLMinimalRoom;
+    this.fullRoom = {} as WLRoom;
+  }
+
+  public start() {
+    this.fullRoom = window.WLInit(this.initOptions);
+    this.room = this.fullRoom as WLMinimalRoom;
+    this.room.setSettings(this.initialSettings);
+    this.registerRoomCallbacks(this.fullRoom)
     this.enablePlugins()
   }
+
   public log(...args: any[]):void  {
     console.log(...args.map(x => JSON.stringify(x)))
   }
@@ -447,33 +452,27 @@ export class Instance extends EventTarget {
     }
   }
 
-  private registerRoomCallbacks():void {
-    this.log(this.fullRoom)
-    this.fullRoom.onPlayerJoin = (player : WLJoiningPlayer) => this.emit('playerJoin', player)
-    this.fullRoom.onPlayerLeave = (player : WLPlayer) => this.emit('playerLeave', player)
-    this.fullRoom.onPlayerKicked = (
+  private registerRoomCallbacks(room: WLRoom):void {
+    room.onPlayerJoin = (player : WLJoiningPlayer) => this.emit('playerJoin', player)
+    room.onPlayerLeave = (player : WLPlayer) => this.emit('playerLeave', player)
+    room.onPlayerKicked = (
         player : WLPlayer, reason : string, ban : boolean, byPlayer : WLPlayer
       ) => this.emit('playerKicked', {player, reason, ban, byPlayer})
-    this.fullRoom.onPlayerChat = (player : WLPlayer, message : string) => this.emit('playerChat', {player, message})
-    this.fullRoom.onPlayerTeamChange = (player : WLPlayer, byPlayer : WLPlayer) => this.emit('playerTeamChange', {player, byPlayer})
-    this.fullRoom.onPlayerAdminChange = (player : WLPlayer, byPlayer : WLPlayer) => this.emit('playerAdminChange', {player, byPlayer})
-    this.fullRoom.onGameTick = () => this.emit('gameTick', null)
-    this.fullRoom.onPlayerActivity = (player : WLPlayer) => this.emit('playerActivity', player)
-    this.fullRoom.onRoomLink = (link: string) => this.emit('roomLink', link)
-    this.fullRoom.onGameStart = () => this.emit('gameStart', null)
-    this.fullRoom.onGameEnd = () => this.emit('gameEnd', null)
-    this.fullRoom.onGameEnd2 = () => this.emit('gameEnd2', null)
-    this.fullRoom.onPlayerKilled = (killed : WLPlayer, killer : WLPlayer) => this.emit('playerKilled', {killed, killer})
-    this.fullRoom.onCaptcha = () => this.emit('captcha', null)
-  }
-
-  private validateInitOptions() {
-    if (!this.initOptions.roomName) {
-      throw 'you must set a roomName'
+    room.onPlayerChat = (player : WLPlayer, message : string) => this.emit('playerChat', {player, message})
+    room.onPlayerTeamChange = (player : WLPlayer, byPlayer : WLPlayer) => this.emit('playerTeamChange', {player, byPlayer})
+    room.onPlayerAdminChange = (player : WLPlayer, byPlayer : WLPlayer) => this.emit('playerAdminChange', {player, byPlayer})
+    room.onGameTick = () => this.emit('gameTick', null)
+    room.onPlayerActivity = (player : WLPlayer) => this.emit('playerActivity', player)
+    room.onRoomLink = (link: string) => this.emit('roomLink', link)
+    room.onGameStart = () => this.emit('gameStart', null)
+    room.onGameEnd = () => this.emit('gameEnd', null)
+    const originalGameEnd2 = room.onGameEnd2;
+    room.onGameEnd2 = () => {
+      (this.config.onGameEnd2 || originalGameEnd2).apply(room)
+      this.emit('gameEnd2', null)
     }
-    if (!this.initOptions.maxPlayers) {
-      throw 'you must set maxPlayers'
-    }
+    room.onPlayerKilled = (killed : WLPlayer, killer : WLPlayer) => this.emit('playerKilled', {killed, killer})
+    room.onCaptcha = () => this.emit('captcha', null)
   }
 
   private generateId():string {
