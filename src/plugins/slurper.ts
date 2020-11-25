@@ -13,16 +13,15 @@ export class Slurper extends Plugin<SlurperConfig> {
     this.config.events.forEach(eventName => {
       this.on(eventName, this.publish.bind(this));
     })
-    this.on('gameStart', this.handleGameStart)
-  }
-
-  private handleGameStart = (event: CustomEvent):void => {
-    this.publish(new CustomEvent('GameSettings', {detail: this.instance.room.getSettings()}))
   }
 
   private publish(event: CustomEvent) {
     let message = {
       time: Date.now(),
+      serverId: this.instance.serverId,
+      instanceId: this.instance.instanceId,
+      gameId: this.instance.gameId,
+      gameStart: this.instance.gameStart.getTime(),
       event: event.type,
     } as any
     if (event.detail !== undefined) {

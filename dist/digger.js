@@ -502,12 +502,6 @@ class Scores extends Plugin {
 }
 
 class Slurper extends Plugin {
-    constructor() {
-        super(...arguments);
-        this.handleGameStart = (event) => {
-            this.publish(new CustomEvent('GameSettings', { detail: this.instance.room.getSettings() }));
-        };
-    }
     activate() {
         if (this.config.url) {
             this.webSocket = new WebSocket(this.config.url);
@@ -515,11 +509,14 @@ class Slurper extends Plugin {
         this.config.events.forEach(eventName => {
             this.on(eventName, this.publish.bind(this));
         });
-        this.on('gameStart', this.handleGameStart);
     }
     publish(event) {
         let message = {
             time: Date.now(),
+            serverId: this.instance.serverId,
+            instanceId: this.instance.instanceId,
+            gameId: this.instance.gameId,
+            gameStart: this.instance.gameStart.getTime(),
             event: event.type,
         };
         if (event.detail !== undefined) {
@@ -671,7 +668,7 @@ class Instance extends EventTarget {
             }
         };
         this.setNewGame = () => {
-            this.gameStartTime = new Date();
+            this.gameStart = new Date();
             this.gameId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`;
         };
         this.window = window;
@@ -688,7 +685,7 @@ class Instance extends EventTarget {
         this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`;
         this.eventTarget = this;
         this.setNewGame();
-        this.on('gameStart', (e) => { this.setNewGame(); });
+        this.on('gameStart', this.setNewGame);
         this.on('playerJoin', ({ detail: player }) => this.playerIdToAuth.set(player.id, player.auth));
         this.on('playerLeave', ({ detail: player }) => this.playerIdToAuth.delete(player.id));
         this.on('playerChat', this.handlePlayerChat);
@@ -867,7 +864,7 @@ class Instance extends EventTarget {
         room.onGameTick = () => this.emit('gameTick', null);
         room.onPlayerActivity = (player) => this.emit('playerActivity', player);
         room.onRoomLink = (link) => this.emit('roomLink', link);
-        room.onGameStart = () => this.emit('gameStart', null);
+        room.onGameStart = () => this.emit('gameStart', room.getSettings());
         room.onGameEnd = () => this.emit('gameEnd', null);
         const originalGameEnd2 = room.onGameEnd2;
         room.onGameEnd2 = () => {

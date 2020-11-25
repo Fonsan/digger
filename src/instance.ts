@@ -85,7 +85,7 @@ export class Instance extends EventTarget {
   public readonly serverId: string;
   public readonly instanceId: string;
   public gameId!: string;
-  public gameStartTime!: Date;
+  public gameStart!: Date;
   public readonly commands = new Map<string, Function>()
   public readonly commandDescriptions = new Map<string, string>()
   public readonly playerIdToAuth = new Map<number, string>()
@@ -181,7 +181,7 @@ export class Instance extends EventTarget {
     this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
     this.eventTarget = (this as CustomEventTarget);
     this.setNewGame();
-    this.on('gameStart', (e) => { this.setNewGame() })
+    this.on('gameStart', this.setNewGame)
     this.on('playerJoin', ({detail: player}:CustomEvent<WLJoiningPlayer>) => this.playerIdToAuth.set(player.id, player.auth))
     this.on('playerLeave', ({detail: player}) => this.playerIdToAuth.delete(player.id))
     this.on('playerChat', this.handlePlayerChat);
@@ -438,7 +438,7 @@ export class Instance extends EventTarget {
   }
 
   private setNewGame = () => {
-    this.gameStartTime = new Date();
+    this.gameStart = new Date();
     this.gameId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
   }
 
@@ -462,7 +462,7 @@ export class Instance extends EventTarget {
     room.onGameTick = () => this.emit('gameTick', null)
     room.onPlayerActivity = (player : WLPlayer) => this.emit('playerActivity', player)
     room.onRoomLink = (link: string) => this.emit('roomLink', link)
-    room.onGameStart = () => this.emit('gameStart', null)
+    room.onGameStart = () => this.emit('gameStart', room.getSettings())
     room.onGameEnd = () => this.emit('gameEnd', null)
     const originalGameEnd2 = room.onGameEnd2;
     room.onGameEnd2 = () => {
