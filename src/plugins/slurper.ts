@@ -24,8 +24,8 @@ export class Slurper extends Plugin<SlurperConfig> {
       gameStart: this.instance.gameStart.getTime(),
       event: event.type,
     } as any
-    if (event.detail !== undefined) {
-      message.detail = event.detail
+    if (event.detail !== undefined && event.detail !== null) {
+      message.data = event.detail
     }
     if (this.webSocket && this.webSocket.readyState == WebSocket.OPEN) {
       this.webSocket.send(JSON.stringify(message))
