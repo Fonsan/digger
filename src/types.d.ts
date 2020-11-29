@@ -80,6 +80,7 @@ declare interface Window {
   WLTOKEN: string;
   WLInit(options: WLInitOptions): WLRoom;
   onWLLoaded: () => void;
+  digger?: Instance;
 }
 
 declare interface CustomEventListener {

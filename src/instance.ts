@@ -177,6 +177,7 @@ export class Instance extends EventTarget {
       throw 'roomName, maxPlayers, public and token must be set'
     }
     this.initOptions = initOptions;
+    window.digger = this;
     this.serverId = this.initOptions.roomName.replace(/[^A-Z0-9]/gi, '-').toLowerCase()
     this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
     this.eventTarget = (this as CustomEventTarget);
