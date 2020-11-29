@@ -17,7 +17,7 @@ import { VoteRestartMap } from './plugins/vote_restart_map'
 import { VoteSkipMap } from './plugins/vote_skip_map'
 
 export interface Config {
-  configVersion: string;
+  configVersion: number;
   voteTime: number;
   voteTimeout: number;
   onGameEnd2?: Function,
@@ -94,7 +94,7 @@ export class Instance extends EventTarget {
   public readonly electionTimeouts = new Map<string, number>()
   public readonly plugins = new Map<string, Plugin<any>>()
 
-  public static configVersion = 'a';
+  public static configVersion = 1;
   public static spectatorTeam = 0;
   public static motd = `Digger ${Instance.configVersion} loaded, write !h or !help in chat for commands`
   private static defaultConfig: Config = {

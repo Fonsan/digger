@@ -878,7 +878,7 @@ class Instance extends EventTarget {
         return `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`;
     }
 }
-Instance.configVersion = 'a';
+Instance.configVersion = 1;
 Instance.spectatorTeam = 0;
 Instance.motd = `Digger ${Instance.configVersion} loaded, write !h or !help in chat for commands`;
 Instance.defaultConfig = {
