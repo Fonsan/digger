@@ -19,7 +19,11 @@ export class VoteKick extends Plugin<VoteKickConfig> {
         return
       }
       this.instance.election(`Kick ${targetPlayer.name} for ${minutes} minutes`, player, () => {
-        this.instance.temporaryBan(targetPlayer, "Vote kick", this.config.kickDuration)
+        if (targetPlayer.admin) {
+          this.instance.error(`${targetPlayer.name} is admin, will not kick`)
+        } else {
+          this.instance.temporaryBan(targetPlayer, "Vote kick", this.config.kickDuration)
+        }
       })
     })
   }
