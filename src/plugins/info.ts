@@ -1,4 +1,5 @@
 import {Plugin, PluginConfig} from './plugin'
+import { Command } from '../command_registry'
 export interface InfoConfig extends PluginConfig {
   announceNameChange: boolean;
   annouceNamesCount: number;
@@ -7,19 +8,7 @@ export class Info extends Plugin<InfoConfig> {
   aliases = new Map<string, Map<string, Date>>()
   public activate() {
     this.on('playerJoin', this.handleJoin)
-    this.registerCommand(['!i', '!info'], 'Check the previously known aliases of a player', (player, message) => {
-      const parts = message.split(' ')
-      if (parts.length < 2) {
-        this.instance.error(`Usage: !i 123 or !info playerName`, player.id);
-        return
-      }
-      const lastPart = parts[parts.length - 1];
-      const targetPlayer = this.instance.findPlayer(lastPart)
-      if (!targetPlayer) {
-        this.instance.error(`Could not find player`, player.id);
-        this.instance.error(`Usage: !i 123 or !info playerName`, player.id);
-        return
-      }
+    this.onCommandWithTarget(Command.VoteKick, (player, targetPlayer, args: string[]) => {
       const auth = this.instance.playerIdToAuth.get(targetPlayer.id) as string;
       this.instance.notify(`${targetPlayer.name} previously known names:`, player.id)
       this.namesByLastUsed(auth).forEach(([name, time]: [string, Date]) => {

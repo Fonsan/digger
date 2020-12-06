@@ -1,4 +1,6 @@
-import {Instance} from './instance'
+import { Instance } from './instance'
+import { Command } from './command_registry'
+
 type Vote = "y" | "n";
 export class Election {
   private instance: Instance;
@@ -16,7 +18,8 @@ export class Election {
     this.instance.currentElection = this;
     const auth = this.instance.playerIdToAuth.get(initiatingPlayer.id) as string;
     this.votes.set(auth, 'y')
-    this.voteCommandHandler = this.instance.registerCommand(['!y', '!n'], '', this.handleVote)
+    this.voteCommandHandler = this.instance.onCommand(Command.VoteYes, this.handleVote)
+    this.voteCommandHandler = this.instance.onCommand(Command.VoteNo, this.handleVote)
     this.instance.on('playerLeave', this.reCount)
     this.instance.on('playerJoin', this.reCount)
     this.timeout = window.setTimeout(() => {

@@ -102,4 +102,3 @@ export class AFK extends Plugin<AFKConfig> {
     }
   }
 }
-

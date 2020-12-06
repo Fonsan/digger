@@ -55,6 +55,212 @@ exports.default = merge;
 
 var merge = /*@__PURE__*/getDefaultExportFromCjs(dist);
 
+var Command;
+(function (Command) {
+    Command["AdminHelp"] = "!a";
+    Command["AdminBan"] = "!ab";
+    Command["AdminClearBan"] = "!acb";
+    Command["AdminDefcon6"] = "!ad6";
+    Command["AdminKick"] = "!ak";
+    Command["AdminMute"] = "!am";
+    Command["AdminUnMute"] = "!aum";
+    Command["AdminRestart"] = "!ar";
+    Command["AdminSkip"] = "!as";
+    Command["Help"] = "!h";
+    Command["Info"] = "!i";
+    Command["PlayerList"] = "!l";
+    Command["StopTheCount"] = "!stc";
+    Command["VoteMute"] = "!vm";
+    Command["VoteNo"] = "!n";
+    Command["VoteRestart"] = "!vr";
+    Command["VoteKick"] = "!vk";
+    Command["VoteSkip"] = "!vs";
+    Command["VoteYes"] = "!y";
+})(Command || (Command = {}));
+const Commands = new Map([
+    [
+        Command.AdminHelp,
+        {
+            verboseCommand: '!adminhelp',
+            description: '!a[s[kip] | r[estart] | d[efcon6] | m[ute] t | u[nmute] t | k[ick] t | b[an] t | c[ban] t], for detailed usage !a kick',
+            admin: true,
+        }
+    ],
+    [
+        Command.AdminBan,
+        {
+            verboseCommand: '!adminban',
+            description: 'Ban by name or id',
+            admin: true,
+            hidden: true,
+            arguments: true
+        }
+    ],
+    [
+        Command.AdminClearBan,
+        {
+            verboseCommand: '!adminclearban',
+            description: 'Clear ban by name or id',
+            admin: true,
+            hidden: true,
+            arguments: true
+        }
+    ],
+    [
+        Command.AdminDefcon6,
+        {
+            verboseCommand: '!admindefcon6',
+            description: 'Admin defcon6',
+            admin: true,
+            hidden: true
+        }
+    ],
+    [
+        Command.AdminKick,
+        {
+            verboseCommand: '!adminkick',
+            description: 'Kick by name or id',
+            admin: true,
+            hidden: true,
+            arguments: true
+        }
+    ],
+    [
+        Command.AdminMute,
+        {
+            verboseCommand: '!adminmute',
+            description: 'Mute by name or id',
+            admin: true,
+            hidden: true,
+            arguments: true
+        }
+    ],
+    [
+        Command.AdminUnMute,
+        {
+            verboseCommand: '!adminunmute',
+            description: 'Unmute by name or id',
+            admin: true,
+            hidden: true,
+            arguments: true
+        }
+    ],
+    [
+        Command.AdminRestart,
+        {
+            verboseCommand: '!adminrestart',
+            description: 'Restart map',
+            admin: true,
+            hidden: true
+        }
+    ],
+    [
+        Command.AdminSkip,
+        {
+            verboseCommand: '!adminskip',
+            description: 'Skip map',
+            admin: true,
+            hidden: true
+        }
+    ],
+    [
+        Command.Help,
+        {
+            verboseCommand: '!help',
+            description: 'Display this help'
+        }
+    ],
+    [
+        Command.Info,
+        {
+            verboseCommand: '!info',
+            description: 'Check the previously known aliases of a player',
+            arguments: true,
+        }
+    ],
+    [
+        Command.PlayerList,
+        {
+            verboseCommand: '!playerlist',
+            description: 'List the players showing an id and name'
+        }
+    ],
+    [
+        Command.StopTheCount,
+        {
+            verboseCommand: '!stopthecount',
+            description: 'Request to stop the count of a vote'
+        }
+    ],
+    [
+        Command.VoteMute,
+        {
+            verboseCommand: '!votemute',
+            description: 'Mute player vote, type !vm for Usage'
+        }
+    ],
+    [
+        Command.VoteKick,
+        {
+            verboseCommand: '!votekick',
+            description: 'Kick player vote, type !vk for Usage'
+        }
+    ],
+    [
+        Command.VoteNo,
+        {
+            hidden: true
+        }
+    ],
+    [
+        Command.VoteRestart,
+        {
+            verboseCommand: '!voterestart',
+            description: 'Restart map vote'
+        }
+    ],
+    [
+        Command.VoteSkip,
+        {
+            verboseCommand: '!voteskip',
+            description: 'Skip map vote'
+        }
+    ],
+    [
+        Command.VoteYes,
+        {
+            hidden: true
+        }
+    ],
+]);
+const VerboseToCommand = new Map(Array.from(Commands).filter(([command, definition]) => definition.verboseCommand).map(([command, definition]) => [definition.verboseCommand, command]));
+class CommandRegistry {
+    constructor(instance) {
+        this.activeCommands = new Map();
+        this.handleCommand = (player, message) => {
+            const firstSpaceIndex = message.indexOf(' ');
+            const commandName = firstSpaceIndex == -1 ? message : message.substr(0, firstSpaceIndex);
+            const callback = this.activeCommands.get(commandName) || this.activeCommands.get(VerboseToCommand.get(commandName));
+            if (callback) {
+                callback.apply(this, [player, message]);
+            }
+            else {
+                this.instance.error(`"${commandName}" not recognized command`, player.id);
+            }
+        };
+        this.instance = instance;
+    }
+    on(command, callback) {
+        if (this.activeCommands.get(command)) {
+            throw `command already registered ${command}`;
+        }
+        this.activeCommands.set(command, callback);
+        return () => {
+            this.activeCommands.delete(command);
+        };
+    }
+}
+
 class Election {
     constructor(instance, name, initiatingPlayer, callback) {
         this.votes = new Map();
@@ -99,7 +305,8 @@ class Election {
         this.instance.currentElection = this;
         const auth = this.instance.playerIdToAuth.get(initiatingPlayer.id);
         this.votes.set(auth, 'y');
-        this.voteCommandHandler = this.instance.registerCommand(['!y', '!n'], '', this.handleVote);
+        this.voteCommandHandler = this.instance.onCommand(Command.VoteYes, this.handleVote);
+        this.voteCommandHandler = this.instance.onCommand(Command.VoteNo, this.handleVote);
         this.instance.on('playerLeave', this.reCount);
         this.instance.on('playerJoin', this.reCount);
         this.timeout = window.setTimeout(() => {
@@ -145,16 +352,40 @@ class Plugin {
         this.listeners.push({ name, listener });
         this.instance.on(name, listener);
     }
-    registerCommand(commands, description, callback) {
-        const handler = this.instance.registerCommand(commands, description, callback);
+    onCommand(command, callback) {
+        const handler = this.instance.onCommand(command, callback);
         this.commandHandlers.push(handler);
         return handler;
+    }
+    onCommandWithTarget(command, callback) {
+        return this.onCommand(command, (player, message) => {
+            const [commandName, target, ...args] = message.split(' ');
+            const targetPlayer = this.instance.findPlayer(target);
+            if (!targetPlayer) {
+                this.instance.error(`Could not find targetPlayer: ${target}, use !list`, player.id);
+                const definition = Commands.get(commandName);
+                if (definition.description) {
+                    this.instance.error(definition.description, player.id);
+                }
+                return;
+            }
+            callback(player, targetPlayer, args);
+        });
     }
 }
 
 class Admin extends Plugin {
     constructor(instance, config) {
         super(instance, config);
+        this.mute = (admin, targetPlayer) => {
+            const minutes = this.config.muteDuration / 1000 / 60;
+            this.instance.notify(`${targetPlayer.name} has been muted for ${minutes} minutes, use "!a unmute ${this.instance.shortId(targetPlayer.id)}" to unmute`, admin.id);
+            this.instance.mute(targetPlayer.id, this.config.muteDuration);
+        };
+        this.unMute = (admin, targetPlayer) => {
+            this.instance.notify(`${targetPlayer.name} has been ungagged`, admin.id);
+            this.instance.unMute(targetPlayer.id);
+        };
         this.handleJoin = ({ detail: player }) => {
             if (this.auths.has(player.auth)) {
                 this.instance.room.setPlayerAdmin(player.id, true);
@@ -162,90 +393,59 @@ class Admin extends Plugin {
         };
         this.auths = new Set(config.auths);
     }
-    activate() {
-        this.on('playerJoin', this.handleJoin);
-        this.registerCommand(['!a'], 'Admin: !a s[kip] | r[estart] | d[efcon6] | m[ute] t | u[nmute] t | k[ick] t | b[an] t | c[ban] t', (player, message) => {
+    onCommand(command, callback) {
+        return super.onCommand(command, (player, message) => {
             if (!player.admin) {
                 this.instance.error('Not admin', player.id);
                 return;
             }
-            const parts = message.replace(/ +/, ' ').split(' ');
-            this.instance.log(parts);
-            if (parts.length < 2) {
-                this.respondWithUsage(player.id);
-                return;
-            }
-            const command = parts[1][0];
-            if (parts.length == 2) {
-                switch (command) {
-                    case 's': {
-                        this.instance.room.endGame();
-                        this.instance.notify(`Admin: ${player.name}, ended game`);
-                        break;
-                    }
-                    case 'r': {
-                        this.instance.room.restartGame();
-                        this.instance.notify(`Admin: ${player.name}, restared game`);
-                        break;
-                    }
-                    case 'd':
-                        this.instance.error('Not yet implemented', player.id);
-                        break;
-                    default: return this.respondWithUsage(player.id);
-                }
-                return;
-            }
-            if (command == 'c') {
-                const id = parseInt(parts[2], 10);
-                if (isNaN(id)) {
-                    this.instance.error(`You need to pass a number, !a c 123`);
-                    return;
-                }
-                this.instance.room.clearBan(id);
-                this.instance.notify(`Clearing ban for player with previous id ${id}`);
-            }
-            const targetPlayer = this.instance.findPlayer(parts[2]);
-            if (!targetPlayer) {
-                this.instance.notify(`Could not find targetPlayer: ${parts[2]}, use !list`, player.id);
-                return;
-            }
-            switch (command) {
-                case 'm':
-                    this.mute(player, targetPlayer);
-                    break;
-                case 'u':
-                    this.unMute(player, targetPlayer);
-                    break;
-                case 'k':
-                    this.instance.room.kickPlayer(targetPlayer.id, `You have been kicked ${parts[3] || ''}`, false);
-                    break;
-                case 'b': {
-                    this.instance.temporaryBan(targetPlayer, `You have been kicked for ${Math.round(this.config.kickDuration / 1000 / 60)} minutes ${parts[3] || ''}`, this.config.kickDuration);
-                    break;
-                }
-                default: return this.respondWithUsage(player.id);
-            }
+            callback(player, message);
         });
     }
-    mute(admin, targetPlayer) {
-        const minutes = this.config.muteDuration / 1000 / 60;
-        this.instance.notify(`${targetPlayer.name} has been muted for ${minutes} minutes, use "!a unmute ${this.instance.shortId(targetPlayer.id)}" to unmute`, admin.id);
-        this.instance.mute(targetPlayer.id, this.config.muteDuration);
-    }
-    unMute(admin, targetPlayer) {
-        this.instance.notify(`${targetPlayer.name} has been ungagged`, admin.id);
-        this.instance.unMute(targetPlayer.id);
+    activate() {
+        this.on('playerJoin', this.handleJoin);
+        this.onCommand(Command.AdminHelp, (player, message) => {
+            this.respondWithUsage(player.id);
+        });
+        this.onCommand(Command.AdminSkip, (player, message) => {
+            this.instance.room.endGame();
+            this.instance.notify(`Admin: ${player.name}, ended game`);
+        });
+        this.onCommand(Command.AdminRestart, (player, message) => {
+            this.instance.room.endGame();
+            this.instance.notify(`Admin: ${player.name}, restared game`);
+        });
+        this.onCommand(Command.AdminDefcon6, (player, message) => {
+            this.instance.error('Not yet implemented', player.id);
+        });
+        this.onCommandWithTarget(Command.AdminClearBan, (player, targetPlayer) => {
+            this.instance.room.clearBan(targetPlayer.id);
+            this.instance.notify(`Clearing ban for player with previous id ${targetPlayer.id}`);
+        });
+        this.onCommandWithTarget(Command.AdminMute, this.mute);
+        this.onCommandWithTarget(Command.AdminUnMute, this.unMute);
+        this.onCommandWithTarget(Command.AdminKick, (player, targetPlayer, args) => {
+            this.instance.room.kickPlayer(targetPlayer.id, `You have been kicked ${args[0] || ''}`, false);
+        });
+        this.onCommandWithTarget(Command.AdminKick, (player, targetPlayer, args) => {
+            this.instance.temporaryBan(targetPlayer, `You have been kicked for ${Math.round(this.config.kickDuration / 1000 / 60)} minutes ${args[0] || ''}`, this.config.kickDuration);
+        });
     }
     respondWithUsage(playerId) {
         this.instance.notify(`Usage:`, playerId);
-        this.instance.notify("!a s or !a skip", playerId);
-        this.instance.notify("!a r or !a restart", playerId);
-        this.instance.notify("!a d or !a defcon6", playerId);
-        this.instance.notify("!a m 123 or !a mute 123", playerId);
-        this.instance.notify("!a u 123 or !a unmute 123", playerId);
-        this.instance.notify("!a k 123 or !a kick 123", playerId);
-        this.instance.notify("!a b 123 or !a ban 123", playerId);
-        this.instance.notify("!a c 123 or !a cban 123", playerId);
+        Array.from(this.instance.commandRegistry.activeCommands.keys()).sort().forEach((command) => {
+            const definition = Commands.get(command);
+            if (!definition.hidden && definition.admin) {
+                if (definition.description) {
+                    if (definition.arguments) {
+                        this.instance.notify(`${command} 123 ${definition.verboseCommand ? `or ${definition.verboseCommand} 123` : ''}`);
+                    }
+                    else {
+                        this.instance.notify(`${command} ${definition.verboseCommand ? `or ${definition.verboseCommand}` : ''}`);
+                    }
+                }
+            }
+        });
     }
 }
 
@@ -362,19 +562,7 @@ class Info extends Plugin {
     }
     activate() {
         this.on('playerJoin', this.handleJoin);
-        this.registerCommand(['!i', '!info'], 'Check the previously known aliases of a player', (player, message) => {
-            const parts = message.split(' ');
-            if (parts.length < 2) {
-                this.instance.error(`Usage: !i 123 or !info playerName`, player.id);
-                return;
-            }
-            const lastPart = parts[parts.length - 1];
-            const targetPlayer = this.instance.findPlayer(lastPart);
-            if (!targetPlayer) {
-                this.instance.error(`Could not find player`, player.id);
-                this.instance.error(`Usage: !i 123 or !info playerName`, player.id);
-                return;
-            }
+        this.onCommandWithTarget(Command.VoteKick, (player, targetPlayer, args) => {
             const auth = this.instance.playerIdToAuth.get(targetPlayer.id);
             this.instance.notify(`${targetPlayer.name} previously known names:`, player.id);
             this.namesByLastUsed(auth).forEach(([name, time]) => {
@@ -429,7 +617,7 @@ class Connection extends Plugin {
 
 class List extends Plugin {
     activate() {
-        this.registerCommand(['!l', '!list'], 'List the players showing an id and name', (commandPlayer, message) => {
+        this.onCommand(Command.PlayerList, (commandPlayer, message) => {
             this.instance.notify('Players: id, name', commandPlayer.id);
             this.instance.room.getPlayerList().forEach(player => {
                 this.instance.notify(`${this.instance.shortId(player.id)}\t${player.name}`, commandPlayer.id);
@@ -532,19 +720,7 @@ class Slurper extends Plugin {
 class VoteMute extends Plugin {
     activate() {
         const minutes = this.config.muteDuration / 1000 / 60;
-        this.registerCommand(['!vm', '!votemute'], 'Mute player vote, type !vm for Usage', (player, message) => {
-            const parts = message.split(' ');
-            if (parts.length < 2) {
-                this.instance.error(`Usage: !vm 123 or !vm playerName`, player.id);
-                return;
-            }
-            const lastPart = parts[parts.length - 1];
-            const targetPlayer = this.instance.findPlayer(lastPart);
-            if (!targetPlayer) {
-                this.instance.error(`Could not find player`, player.id);
-                this.instance.error(`Usage: !vm 123 or !vm playerName`, player.id);
-                return;
-            }
+        this.onCommandWithTarget(Command.VoteKick, (player, targetPlayer, args) => {
             this.instance.election(`Mute ${targetPlayer.name}`, player, () => {
                 this.instance.mute(targetPlayer.id, this.config.muteDuration);
                 this.instance.notify(`${targetPlayer.name} has been muted for ${minutes} minutes`);
@@ -556,21 +732,14 @@ class VoteMute extends Plugin {
 class VoteKick extends Plugin {
     activate() {
         const minutes = Math.round(this.config.kickDuration / 1000 / 60);
-        this.registerCommand(['!vk', '!votekick'], 'Kick player vote, type !vk for Usage', (player, message) => {
-            const parts = message.split(' ');
-            if (parts.length < 2) {
-                this.instance.error(`Usage: !vk 123 or !vk playerName`, player.id);
-                return;
-            }
-            const lastPart = parts[parts.length - 1];
-            const targetPlayer = this.instance.findPlayer(lastPart);
-            if (!targetPlayer) {
-                this.instance.error(`Could not find player`, player.id);
-                this.instance.error(`Usage: !vk 123 or !vk playerName`, player.id);
-                return;
-            }
+        this.onCommandWithTarget(Command.VoteKick, (player, targetPlayer, args) => {
             this.instance.election(`Kick ${targetPlayer.name} for ${minutes} minutes`, player, () => {
-                this.instance.temporaryBan(targetPlayer, "Vote kick", this.config.kickDuration);
+                if (targetPlayer.admin) {
+                    this.instance.error(`${targetPlayer.name} is admin, will not kick`);
+                }
+                else {
+                    this.instance.temporaryBan(targetPlayer, "Vote kick", this.config.kickDuration);
+                }
             });
         });
     }
@@ -578,7 +747,7 @@ class VoteKick extends Plugin {
 
 class VoteRestartMap extends Plugin {
     activate() {
-        this.registerCommand(['!vr', '!voterestart'], 'Restart map vote', (player, message) => {
+        this.onCommand(Command.VoteRestart, (player, message) => {
             this.instance.election('Skip map', player, () => {
                 this.instance.room.restartGame();
                 this.instance.notify('Game restarted');
@@ -589,7 +758,7 @@ class VoteRestartMap extends Plugin {
 
 class VoteSkipMap extends Plugin {
     activate() {
-        this.registerCommand(['!vs', '!voteskip'], 'Skip map vote', (player, message) => {
+        this.onCommand(Command.VoteSkip, (player, message) => {
             this.instance.election('Skip map', player, () => this.instance.room.endGame());
         });
     }
@@ -626,12 +795,22 @@ class Instance extends EventTarget {
     constructor(window, initOptions, initialSettings, config) {
         super();
         this.commands = new Map();
-        this.commandDescriptions = new Map();
         this.playerIdToAuth = new Map();
         this.mutedPlayers = new Map();
         this.activePlayers = new Map();
         this.electionTimeouts = new Map();
         this.plugins = new Map();
+        this.handleHelp = (player, message) => {
+            this.notify("Available commands:", player.id);
+            Array.from(this.commandRegistry.activeCommands.keys()).sort().forEach((command) => {
+                const definition = Commands.get(command);
+                if (!definition.hidden && (!definition.admin || player.admin)) {
+                    if (definition.description) {
+                        this.notify(definition.description, player.id);
+                    }
+                }
+            });
+        };
         this.handleActive = ({ detail: { player, byPlayer } }) => {
             if (player.team == 0) {
                 this.emit('playerInactive', player);
@@ -648,15 +827,7 @@ class Instance extends EventTarget {
             let { player, message } = event.detail;
             message = message.trim();
             if (message[0] == '!') {
-                const firstSpaceIndex = message.indexOf(' ');
-                const commandName = firstSpaceIndex == -1 ? message : message.substr(0, firstSpaceIndex);
-                const callback = this.commands.get(commandName);
-                if (callback) {
-                    callback.apply(this, [player, message]);
-                }
-                else {
-                    this.error(`"${commandName}" not recognized command`, player.id);
-                }
+                this.commandRegistry.handleCommand(player, message);
                 event.preventDefault();
             }
             const auth = this.playerIdToAuth.get(player.id);
@@ -681,6 +852,8 @@ class Instance extends EventTarget {
             throw 'roomName, maxPlayers, public and token must be set';
         }
         this.initOptions = initOptions;
+        window.digger = this;
+        this.commandRegistry = new CommandRegistry(this);
         this.serverId = this.initOptions.roomName.replace(/[^A-Z0-9]/gi, '-').toLowerCase();
         this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`;
         this.eventTarget = this;
@@ -693,8 +866,8 @@ class Instance extends EventTarget {
         this.on('roomLink', ({ detail: url }) => this.log(`Started: ${url}`));
         this.on('captcha', () => this.log('Failed to start: Faulty token'));
         this.on('playerJoin', ({ detail: player }) => this.notify(Instance.motd, player.id));
-        this.registerCommand(['!h', '!help'], 'Display this help', this.handleHelp);
-        this.registerCommand(['!stc', '!stopthecount'], 'Request to stop the count of a vote', this.handleStopTheCount);
+        this.onCommand(Command.Help, this.handleHelp);
+        this.onCommand(Command.StopTheCount, this.handleStopTheCount);
         this.room = {};
         this.fullRoom = {};
     }
@@ -729,21 +902,8 @@ class Instance extends EventTarget {
     error(message, target) {
         this.room.sendAnnouncement(message, target, 0xFF0000, "bold", 2);
     }
-    registerCommand(names, description, callback) {
-        this.commandDescriptions.set(names[0], [...names.map(name => name.padEnd(4, ' ')), description].join(" "));
-        names.forEach(name => {
-            if (name[0] != '!' || name.length < 2) {
-                throw `${name} command not valid`;
-            }
-            if (this.commands.get(name)) {
-                throw `command already registered ${name}`;
-            }
-            this.commands.set(name, callback);
-        });
-        return () => {
-            this.commandDescriptions.delete(names[0]);
-            names.forEach(name => this.commands.delete(name));
-        };
+    onCommand(command, callback) {
+        return this.commandRegistry.on(command, callback);
     }
     findPlayer(token) {
         const players = this.room.getPlayerList();
@@ -840,12 +1000,6 @@ class Instance extends EventTarget {
             }
         });
     }
-    handleHelp(player, message) {
-        this.notify("Available commands:", player.id);
-        const commands = Array.from(this.commandDescriptions.values()).sort();
-        commands.filter((command) => player.admin || !(command.substr(0, 2) == '!a'))
-            .forEach(command => this.notify(command, player.id));
-    }
     handleStopTheCount(player, message) {
         if (this.currentElection) {
             this.notify(`${player.name} has requested to stop the count, we of course ignore it and the counting of votes will continue`);
@@ -868,8 +1022,8 @@ class Instance extends EventTarget {
         room.onGameEnd = () => this.emit('gameEnd', null);
         const originalGameEnd2 = room.onGameEnd2;
         room.onGameEnd2 = () => {
-            (this.config.onGameEnd2 || originalGameEnd2).apply(room);
             this.emit('gameEnd2', null);
+            (this.config.onGameEnd2 || originalGameEnd2).apply(room);
         };
         room.onPlayerKilled = (killed, killer) => this.emit('playerKilled', { killed, killer });
         room.onCaptcha = () => this.emit('captcha', null);

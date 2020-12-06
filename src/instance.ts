@@ -2,6 +2,7 @@ import { DeepNonNullable } from "ts-essentials"
 import merge from "ts-deepmerge";
 import { Election } from './election'
 import { Plugin, PluginConfig } from './plugins/plugin'
+import { Command, Commands, CommandDefinition, CommandRegistry } from './command_registry'
 
 import { Admin, AdminConfig } from './plugins/admin'
 import { AFK, AFKConfig } from './plugins/afk'
@@ -86,8 +87,8 @@ export class Instance extends EventTarget {
   public readonly instanceId: string;
   public gameId!: string;
   public gameStart!: Date;
+  public commandRegistry: CommandRegistry;
   public readonly commands = new Map<string, Function>()
-  public readonly commandDescriptions = new Map<string, string>()
   public readonly playerIdToAuth = new Map<number, string>()
   public readonly mutedPlayers = new Map<string, MuteConfig>()
   public readonly activePlayers = new Map<number, boolean>()
@@ -178,6 +179,7 @@ export class Instance extends EventTarget {
     }
     this.initOptions = initOptions;
     window.digger = this;
+    this.commandRegistry = new CommandRegistry(this);
     this.serverId = this.initOptions.roomName.replace(/[^A-Z0-9]/gi, '-').toLowerCase()
     this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
     this.eventTarget = (this as CustomEventTarget);
@@ -190,8 +192,8 @@ export class Instance extends EventTarget {
     this.on('roomLink', ({detail: url}) => this.log(`Started: ${url}`))
     this.on('captcha', () => this.log('Failed to start: Faulty token'))
     this.on('playerJoin', ({detail: player}: CustomEvent<WLJoiningPlayer>) => this.notify(Instance.motd, player.id))
-    this.registerCommand(['!h', '!help'], 'Display this help', this.handleHelp)
-    this.registerCommand(['!stc', '!stopthecount'], 'Request to stop the count of a vote', this.handleStopTheCount)
+    this.onCommand(Command.Help, this.handleHelp)
+    this.onCommand(Command.StopTheCount, this.handleStopTheCount)
     this.room = {} as WLMinimalRoom;
     this.fullRoom = {} as WLRoom;
   }
@@ -236,21 +238,8 @@ export class Instance extends EventTarget {
     this.room.sendAnnouncement(message, target, 0xFF0000, "bold", 2)
   }
 
-  public registerCommand(names: string[], description: string, callback: ((player: WLPlayer, message: string) => void) ):Function {
-    this.commandDescriptions.set(names[0], [...names.map(name => name.padEnd(4, ' ')), description].join(" "))
-    names.forEach(name => {
-      if(name[0] != '!' || name.length < 2) {
-        throw `${name} command not valid`
-      }
-      if(this.commands.get(name)) {
-        throw `command already registered ${name}`
-      }
-      this.commands.set(name, callback)
-    })
-    return () => {
-      this.commandDescriptions.delete(names[0])
-      names.forEach(name => this.commands.delete(name))
-    }
+  public onCommand(command: Command, callback: ((player: WLPlayer, message: string) => void) ):Function {
+    return this.commandRegistry.on(command, callback)
   }
 
   public findPlayer(token: string): WLPlayer | undefined {
@@ -396,11 +385,16 @@ export class Instance extends EventTarget {
     })
   }
 
-  private handleHelp(player: WLPlayer, message:string) {
+  private handleHelp = (player: WLPlayer, message:string) => {
     this.notify("Available commands:", player.id);
-    const commands = Array.from(this.commandDescriptions.values()).sort()
-    commands.filter((command) => player.admin || !(command.substr(0,2) == '!a'))
-      .forEach(command => this.notify(command, player.id))
+    Array.from(this.commandRegistry.activeCommands.keys()).sort().forEach((command) => {
+      const definition = Commands.get(command) as CommandDefinition
+      if (!definition.hidden && (!definition.admin || player.admin)) {
+        if(definition.description) {
+          this.notify(definition.description, player.id)
+        }
+      }
+    })
   }
 
   private handleActive = ({detail: {player, byPlayer}}: CustomEvent<PlayerChange>) => {
@@ -419,14 +413,7 @@ export class Instance extends EventTarget {
     let {player, message} = event.detail;
     message = message.trim();
     if(message[0] == '!') {
-      const firstSpaceIndex = message.indexOf(' ');
-      const commandName = firstSpaceIndex == -1 ? message : message.substr(0, firstSpaceIndex);
-      const callback = this.commands.get(commandName)
-      if (callback) {
-        callback.apply(this, [player, message])
-      } else {
-        this.error(`"${commandName}" not recognized command`, player.id)
-      }
+      this.commandRegistry.handleCommand(player, message)
       event.preventDefault()
     }
     const auth = this.playerIdToAuth.get(player.id) as string;
@@ -467,7 +454,7 @@ export class Instance extends EventTarget {
     room.onGameEnd = () => this.emit('gameEnd', null)
     const originalGameEnd2 = room.onGameEnd2;
     room.onGameEnd2 = () => {
-      this.emit('gameEnd2', null)
+      this.emit('gameEnd2', null);
       (this.config.onGameEnd2 || originalGameEnd2).apply(room)
     }
     room.onPlayerKilled = (killed : WLPlayer, killer : WLPlayer) => this.emit('playerKilled', {killed, killer})
