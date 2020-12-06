@@ -467,8 +467,8 @@ export class Instance extends EventTarget {
     room.onGameEnd = () => this.emit('gameEnd', null)
     const originalGameEnd2 = room.onGameEnd2;
     room.onGameEnd2 = () => {
-      (this.config.onGameEnd2 || originalGameEnd2).apply(room)
       this.emit('gameEnd2', null)
+      (this.config.onGameEnd2 || originalGameEnd2).apply(room)
     }
     room.onPlayerKilled = (killed : WLPlayer, killer : WLPlayer) => this.emit('playerKilled', {killed, killer})
     room.onCaptcha = () => this.emit('captcha', null)
