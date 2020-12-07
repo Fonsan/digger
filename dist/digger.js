@@ -3887,9 +3887,8 @@ class LevelIndex {
             };
         });
         this.index = lunr(function () {
-            this.field('name');
-            this.field('path');
-            this.field('full');
+            this.field('name', { boost: 2 });
+            this.field('path', { boost: 1 });
             searchLevels.forEach(searchableLevel => this.add(searchableLevel));
         });
     }
