@@ -1,5 +1,4 @@
 import lunr from 'lunr'
-import { AllMaps } from './all_maps'
 interface SearchableLevel {
   id: number,
   full: string,
@@ -12,9 +11,9 @@ export class LevelIndex {
   private searchLevels: SearchableLevel[];
   private index: lunr.Index;
   private mapCache = new Map<string, ArrayBuffer>();
-  constructor(baseURL: string, levelNames?: string[]) {
+  constructor(baseURL: string, levels: string[]) {
     this.baseURL = baseURL;
-    this.levels = levelNames || AllMaps
+    this.levels = levels;
     const searchLevels = this.searchLevels = this.levels.map((text, i) => {
       const parts = text.split('/')
       return {

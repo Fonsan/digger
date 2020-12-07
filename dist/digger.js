@@ -3880,13 +3880,11 @@ lunr.QueryParser.parseBoost = function (parser) {
 })();
 });
 
-const AllMaps = await (await fetch("https://webliero.gitlab.io/webliero-maps/pools/index.json")).json();
-
 class LevelIndex {
-    constructor(baseURL, levelNames) {
+    constructor(baseURL, levels) {
         this.mapCache = new Map();
         this.baseURL = baseURL;
-        this.levels = levelNames || AllMaps;
+        this.levels = levels;
         const searchLevels = this.searchLevels = this.levels.map((text, i) => {
             const parts = text.split('/');
             return {
@@ -6633,11 +6631,14 @@ class Instance extends EventTarget {
         this.initOptions = initOptions;
         window.digger = this;
         this.commandRegistry = new CommandRegistry(this);
-        this.levelIndex = new LevelIndex(this.config.levelBaseURL, this.config.levelNames);
+        this.levelIndex = new LevelIndex(this.config.levelBaseURL, this.config.levels);
         this.serverId = this.initOptions.roomName.replace(/[^A-Z0-9]/gi, '-').toLowerCase();
         this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`;
         this.eventTarget = this;
         this.setNewGame();
+        if (config.levels.length == 0) {
+            throw 'You must set levels to await (await fetch("https://webliero.gitlab.io/webliero-maps/pools/index.json").json()';
+        }
         if (initialSettings.levelPool) {
             const pool = DefaultPools.get(initialSettings.levelPool);
             if (!pool) {
@@ -6870,6 +6871,7 @@ Instance.defaultConfig = {
     configVersion: Instance.configVersion,
     voteTime: 30000,
     voteTimeout: 45000,
+    levels: [],
     levelBaseURL: "https://webliero.gitlab.io/webliero-maps",
     plugins: {
         admin: {
