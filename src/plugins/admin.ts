@@ -32,6 +32,10 @@ export class Admin extends Plugin<AdminConfig> {
       this.instance.room.endGame();
       this.instance.notify(`Admin: ${player.name}, ended game`)
     })
+    this.onCommand(Command.AdminShuffle, (player: WLPlayer, message: string) => {
+      this.instance.notify(`Admin: ${player.name}, shuffled map pool`)
+      this.instance.levelManager.shuffle()
+    })
     this.onCommand(Command.AdminRestart, (player: WLPlayer, message: string) => {
       this.instance.room.endGame();
       this.instance.notify(`Admin: ${player.name}, restared game`)

@@ -49,7 +49,7 @@ export class LevelManager {
     return this.nextOverride ? this.nextOverride : this.sequence[(this.position + 1) % this.sequence.length];
   }
 
-  private shuffle():void {
+  public shuffle():void {
     this.sequence = this.levelNames.slice().sort((a,b) => Math.random() - 0.5)
   }
 }

@@ -9,6 +9,7 @@ export enum Command {
   AdminMute = '!am',
   AdminUnMute = '!aum',
   AdminRestart = '!ar',
+  AdminShuffle = '!ash',
   AdminSkip = '!as',
   Help = '!h',
   Info = '!i',
@@ -123,6 +124,15 @@ export const Commands = new Map<Command, CommandDefinition>([
     {
       verboseCommand: '!adminskip',
       description: 'Skip map',
+      admin: true,
+      hidden: true
+    }
+  ],
+  [
+    Command.AdminShuffle,
+    {
+      verboseCommand: '!adminskip',
+      description: 'Shuffle map pool',
       admin: true,
       hidden: true
     }

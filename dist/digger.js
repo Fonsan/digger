@@ -66,6 +66,7 @@ var Command;
     Command["AdminMute"] = "!am";
     Command["AdminUnMute"] = "!aum";
     Command["AdminRestart"] = "!ar";
+    Command["AdminShuffle"] = "!ash";
     Command["AdminSkip"] = "!as";
     Command["Help"] = "!h";
     Command["Info"] = "!i";
@@ -173,6 +174,15 @@ const Commands = new Map([
         {
             verboseCommand: '!adminskip',
             description: 'Skip map',
+            admin: true,
+            hidden: true
+        }
+    ],
+    [
+        Command.AdminShuffle,
+        {
+            verboseCommand: '!adminskip',
+            description: 'Shuffle map pool',
             admin: true,
             hidden: true
         }
@@ -6125,6 +6135,10 @@ class Admin extends Plugin {
         this.onCommand(Command.AdminSkip, (player, message) => {
             this.instance.room.endGame();
             this.instance.notify(`Admin: ${player.name}, ended game`);
+        });
+        this.onCommand(Command.AdminShuffle, (player, message) => {
+            this.instance.notify(`Admin: ${player.name}, shuffled map pool`);
+            this.instance.levelManager.shuffle();
         });
         this.onCommand(Command.AdminRestart, (player, message) => {
             this.instance.room.endGame();
