@@ -6270,6 +6270,24 @@ class AFK extends Plugin {
     }
 }
 
+class Doubler extends Plugin {
+    constructor() {
+        super(...arguments);
+        this.updateDouble = () => {
+            const activePlayers = this.instance.room.getPlayerList().filter(player => player.team != 0);
+            const currentSettings = this.instance.room.getSettings();
+            const double = activePlayers.length >= this.config.threshold;
+            if (double != currentSettings.expandLevel) {
+                this.instance.notify(`${double ? 'More' : 'Less'} than ${this.config.threshold} active players, next map ${!double && 'not' || ''} will be expanded`);
+                this.instance.room.setSettings({ expandLevel: double });
+            }
+        };
+    }
+    activate() {
+        this.on('gameEnd', this.updateDouble);
+    }
+}
+
 class Info extends Plugin {
     constructor() {
         super(...arguments);
@@ -6778,6 +6796,9 @@ class Instance extends EventTarget {
                     case 'afk':
                         this.registerPlugin(name, new AFK(this, this.config.plugins.afk));
                         break;
+                    case 'doubler':
+                        this.registerPlugin(name, new Doubler(this, this.config.plugins.doubler));
+                        break;
                     case 'info':
                         this.registerPlugin(name, new Info(this, this.config.plugins.info));
                         break;
@@ -6886,6 +6907,10 @@ Instance.defaultConfig = {
             graceTime: 10000,
             hotTimeout: 3000,
             kickAFKSpectatorWhenFull: true
+        },
+        doubler: {
+            enabled: true,
+            threshold: 8
         },
         info: {
             enabled: true,

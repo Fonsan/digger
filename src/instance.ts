@@ -9,6 +9,7 @@ import { DefaultPools } from './default_pools'
 
 import { Admin, AdminConfig } from './plugins/admin'
 import { AFK, AFKConfig } from './plugins/afk'
+import { Doubler, DoublerConfig } from './plugins/doubler'
 import { Info, InfoConfig } from './plugins/info'
 import { Connection, ConnectionConfig } from './plugins/connection'
 import { List } from './plugins/list'
@@ -34,6 +35,7 @@ export interface Config {
   plugins: {
     admin: AdminConfig,
     afk: AFKConfig,
+    doubler: DoublerConfig,
     info: InfoConfig,
     connection: ConnectionConfig,
     list: PluginConfig,
@@ -132,6 +134,10 @@ export class Instance extends EventTarget {
         graceTime: 10000,
         hotTimeout: 3000,
         kickAFKSpectatorWhenFull: true
+      },
+      doubler: {
+        enabled: true,
+        threshold: 8
       },
       info: {
         enabled: true,
@@ -376,6 +382,12 @@ export class Instance extends EventTarget {
             this.registerPlugin(
               name,
               new AFK(this, this.config.plugins.afk)
+            )
+            break;
+          case 'doubler':
+            this.registerPlugin(
+              name,
+              new Doubler(this, this.config.plugins.doubler)
             )
             break;
           case 'info':
