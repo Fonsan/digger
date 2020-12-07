@@ -8,7 +8,7 @@ export class Info extends Plugin<InfoConfig> {
   aliases = new Map<string, Map<string, Date>>()
   public activate() {
     this.on('playerJoin', this.handleJoin)
-    this.onCommandWithTarget(Command.VoteKick, (player, targetPlayer, args: string[]) => {
+    this.onCommandWithTarget(Command.Info, (player, targetPlayer, args: string[]) => {
       const auth = this.instance.playerIdToAuth.get(targetPlayer.id) as string;
       this.instance.notify(`${targetPlayer.name} previously known names:`, player.id)
       this.namesByLastUsed(auth).forEach(([name, time]: [string, Date]) => {

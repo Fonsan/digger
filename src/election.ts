@@ -18,8 +18,11 @@ export class Election {
     this.instance.currentElection = this;
     const auth = this.instance.playerIdToAuth.get(initiatingPlayer.id) as string;
     this.votes.set(auth, 'y')
-    this.voteCommandHandler = this.instance.onCommand(Command.VoteYes, this.handleVote)
-    this.voteCommandHandler = this.instance.onCommand(Command.VoteNo, this.handleVote)
+    const handlers = [
+      this.instance.onCommand(Command.VoteYes, this.handleVote),
+      this.instance.onCommand(Command.VoteNo, this.handleVote)
+    ]
+    this.voteCommandHandler = () => handlers.forEach(handler => handler())
     this.instance.on('playerLeave', this.reCount)
     this.instance.on('playerJoin', this.reCount)
     this.timeout = window.setTimeout(() => {
@@ -50,9 +53,8 @@ export class Election {
       try {
         this.callback();
         this.end();
-      } catch (e: unknown) {
-        this.instance.log('EXception')
-        this.instance.log('EXception', e)
+      } catch (e) {
+        this.instance.log('Exception', e)
       }
 
     } else if(voteCounts.n >= neededVotes || voteCounts.n + voteCounts.y == playerCount) {

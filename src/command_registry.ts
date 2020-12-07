@@ -5,18 +5,22 @@ export enum Command {
   AdminClearBan = '!acb',
   AdminDefcon6 = '!ad6',
   AdminKick = '!ak',
+  AdminNextMap = '!an',
   AdminMute = '!am',
   AdminUnMute = '!aum',
   AdminRestart = '!ar',
   AdminSkip = '!as',
   Help = '!h',
   Info = '!i',
+  NextMap = '!m',
   PlayerList = '!l',
+  SearchLevels = '!s',
   StopTheCount = '!stc',
   VoteMute = '!vm',
   VoteNo = '!n',
   VoteRestart = '!vr',
   VoteKick = '!vk',
+  VoteMap = '!vn',
   VoteSkip = '!vs',
   VoteYes = '!y',
 }
@@ -76,6 +80,16 @@ export const Commands = new Map<Command, CommandDefinition>([
     }
   ],
   [
+    Command.AdminNextMap,
+    {
+      verboseCommand: '!adminnextmap',
+      description: 'Set next map, !an 123 or !an *fooo*',
+      admin: true,
+      hidden: true,
+      arguments: true
+    }
+  ],
+  [
     Command.AdminMute,
     {
       verboseCommand: '!adminmute',
@@ -129,10 +143,25 @@ export const Commands = new Map<Command, CommandDefinition>([
     }
   ],
   [
+    Command.NextMap,
+    {
+      verboseCommand: '!map',
+      description: 'Check current and next map',
+      arguments: true,
+    }
+  ],
+  [
     Command.PlayerList,
     {
       verboseCommand: '!playerlist',
       description: 'List the players showing an id and name'
+    }
+  ],
+  [
+    Command.SearchLevels,
+    {
+      verboseCommand: '!searchlevels',
+      description: 'Search level, Usage !s *worm*'
     }
   ],
   [
@@ -147,6 +176,13 @@ export const Commands = new Map<Command, CommandDefinition>([
     {
       verboseCommand: '!votemute',
       description: 'Mute player vote, type !vm for Usage'
+    }
+  ],
+  [
+    Command.VoteMap,
+    {
+      verboseCommand: '!votenext',
+      description: 'Vote next map, !vn mapname'
     }
   ],
   [

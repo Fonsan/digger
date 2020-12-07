@@ -6,7 +6,7 @@ export interface VoteMuteConfig extends PluginConfig {
 export class VoteMute extends Plugin<VoteMuteConfig> {
   public activate() {
     const minutes = this.config.muteDuration / 1000 / 60
-    this.onCommandWithTarget(Command.VoteKick, (player, targetPlayer, args: string[]) => {
+    this.onCommandWithTarget(Command.VoteMute, (player, targetPlayer, args: string[]) => {
       this.instance.election(`Mute ${targetPlayer.name}`, player, () => {
         this.instance.mute(targetPlayer.id, this.config.muteDuration)
         this.instance.notify(`${targetPlayer.name} has been muted for ${minutes} minutes`)

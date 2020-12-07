@@ -3,6 +3,9 @@ import merge from "ts-deepmerge";
 import { Election } from './election'
 import { Plugin, PluginConfig } from './plugins/plugin'
 import { Command, Commands, CommandDefinition, CommandRegistry } from './command_registry'
+import { LevelManager } from './level_manager'
+import { LevelIndex } from './level_index'
+import { DefaultPools } from './default_pools'
 
 import { Admin, AdminConfig } from './plugins/admin'
 import { AFK, AFKConfig } from './plugins/afk'
@@ -10,17 +13,23 @@ import { Info, InfoConfig } from './plugins/info'
 import { Connection, ConnectionConfig } from './plugins/connection'
 import { List } from './plugins/list'
 import { OnePlayer } from './plugins/one_player'
+import { NextMap } from './plugins/next_map'
 import { Scores } from './plugins/scores'
+import { SearchLevels, SearchLevelsConfig } from './plugins/search_levels'
 import { Slurper, SlurperConfig} from './plugins/slurper'
+import { VoteMap } from './plugins/vote_map'
 import { VoteMute, VoteMuteConfig} from './plugins/vote_mute'
 import { VoteKick, VoteKickConfig} from './plugins/vote_kick'
 import { VoteRestartMap } from './plugins/vote_restart_map'
 import { VoteSkipMap } from './plugins/vote_skip_map'
 
 export interface Config {
-  configVersion: number;
-  voteTime: number;
-  voteTimeout: number;
+  configVersion: number,
+  voteTime: number,
+  voteTimeout: number,
+  levelBaseURL: string,
+  levelNames?: string[],
+  pool?: string[]
   onGameEnd2?: Function,
   plugins: {
     admin: AdminConfig,
@@ -28,14 +37,17 @@ export interface Config {
     info: InfoConfig,
     connection: ConnectionConfig,
     list: PluginConfig,
+    nextMap: PluginConfig,
     onePlayer: PluginConfig,
+    searchLevels: SearchLevelsConfig,
     scores: PluginConfig,
     slurper: SlurperConfig,
+    voteMap: PluginConfig,
     voteMutePlayer: VoteMuteConfig,
     voteKickPlayer: VoteKickConfig,
     voteRestartMap: PluginConfig,
     voteSkipMap: PluginConfig,
-  };
+  }
 }
 enum EventEnum {
   captcha,
@@ -44,6 +56,7 @@ enum EventEnum {
   gameEnd2,
   gameStart,
   gameTick,
+  loadLevel,
   newPlayer,
   playerActive,
   playerActivity,
@@ -88,6 +101,8 @@ export class Instance extends EventTarget {
   public gameId!: string;
   public gameStart!: Date;
   public commandRegistry: CommandRegistry;
+  public levelManager: LevelManager;
+  public levelIndex: LevelIndex;
   public readonly commands = new Map<string, Function>()
   public readonly playerIdToAuth = new Map<number, string>()
   public readonly mutedPlayers = new Map<string, MuteConfig>()
@@ -97,11 +112,12 @@ export class Instance extends EventTarget {
 
   public static configVersion = 1;
   public static spectatorTeam = 0;
-  public static motd = `Digger ${Instance.configVersion} loaded, write !h or !help in chat for commands`
+  public static motd = `Digger loaded, write !h or !help in chat for commands`
   private static defaultConfig: Config = {
     configVersion: Instance.configVersion,
     voteTime: 30000,
     voteTimeout: 45000,
+    levelBaseURL: "https://webliero.gitlab.io/webliero-maps",
     plugins: {
       admin: {
         enabled: true,
@@ -126,7 +142,12 @@ export class Instance extends EventTarget {
         maxConnectionsPerIP: 3
       },
       list: {enabled: true},
+      nextMap: {enabled: true},
       onePlayer: {enabled: true},
+      searchLevels: {
+        enabled: true,
+        resultSize: 4
+      },
       scores: {enabled: true},
       slurper: {
         enabled: true,
@@ -136,6 +157,7 @@ export class Instance extends EventTarget {
           'gameEnd',
           'gameEnd2',
           'gameStart',
+          'loadLevel',
           // 'gameTick', // Disabled for performance reasons
           'newPlayer',
           'playerActive',
@@ -153,6 +175,7 @@ export class Instance extends EventTarget {
           'teamScores',
         ]
       },
+      voteMap: { enabled: true },
       voteMutePlayer: {
         enabled: true,
         muteDuration: 15 * 60 * 1000
@@ -180,10 +203,23 @@ export class Instance extends EventTarget {
     this.initOptions = initOptions;
     window.digger = this;
     this.commandRegistry = new CommandRegistry(this);
+    this.levelIndex = new LevelIndex(this.config.levelBaseURL, this.config.levelNames);
     this.serverId = this.initOptions.roomName.replace(/[^A-Z0-9]/gi, '-').toLowerCase()
     this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
     this.eventTarget = (this as CustomEventTarget);
     this.setNewGame();
+    if (initialSettings.levelPool) {
+      const pool = DefaultPools.get(initialSettings.levelPool)
+      if (!pool) {
+        throw `levelPool not found: ${initialSettings.levelPool}`
+      }
+      this.levelManager = new LevelManager(this.levelIndex, pool);
+    } else {
+      if (!this.config.pool) {
+        throw 'Missing levelManager pool in digger config'
+      }
+      this.levelManager = new LevelManager(this.levelIndex, this.config.pool);
+    }
     this.on('gameStart', this.setNewGame)
     this.on('playerJoin', ({detail: player}:CustomEvent<WLJoiningPlayer>) => this.playerIdToAuth.set(player.id, player.auth))
     this.on('playerLeave', ({detail: player}) => this.playerIdToAuth.delete(player.id))
@@ -220,7 +256,7 @@ export class Instance extends EventTarget {
     this.eventTarget.removeEventListener(name, listener);
   }
 
-  public emit(name: EventName, detail: any) {
+  public emit(name: EventName, detail?: any) {
     return this.eventTarget.dispatchEvent(
       new CustomEvent<any>(name, { detail, cancelable: true })
     )
@@ -246,6 +282,24 @@ export class Instance extends EventTarget {
     const players = this.room.getPlayerList()
     const playerById = players.find(player => this.shortId(player.id).toString() == token)
     return playerById || players.find(player => player.name == token)
+  }
+
+  public findLevel(token: string): string | undefined {
+    if (this.levelIndex.levels.indexOf(token) != -1) {
+      return token;
+    } else if (token.match(/^\d+$/)) {
+      const index = parseInt(token, 10)
+      return this.levelIndex.levels[index]
+    } else {
+      const firstMatch = this.levelIndex.search(token)[0]
+      if (firstMatch) {
+        return firstMatch.full
+      }
+    }
+  }
+
+  public setPool(pool: string[], baseURL?:string) {
+    this.levelManager = new LevelManager(this.levelIndex, pool)
   }
 
   public mute(playerId: number, duration: number):void {
@@ -344,6 +398,18 @@ export class Instance extends EventTarget {
               new OnePlayer(this, this.config.plugins.onePlayer)
             )
             break;
+          case 'nextMap':
+            this.registerPlugin(
+              name,
+              new NextMap(this, this.config.plugins.nextMap)
+            )
+            break;
+          case 'searchLevels':
+            this.registerPlugin(
+              name,
+              new SearchLevels(this, this.config.plugins.searchLevels)
+            )
+            break;
           case 'scores':
             this.registerPlugin(
               name,
@@ -354,6 +420,12 @@ export class Instance extends EventTarget {
             this.registerPlugin(
               name,
               new Slurper(this, this.config.plugins.slurper)
+            )
+            break;
+          case 'voteMap':
+            this.registerPlugin(
+              name,
+              new VoteMap(this, this.config.plugins.voteMap)
             )
             break;
           case 'voteMutePlayer':
@@ -391,7 +463,7 @@ export class Instance extends EventTarget {
       const definition = Commands.get(command) as CommandDefinition
       if (!definition.hidden && (!definition.admin || player.admin)) {
         if(definition.description) {
-          this.notify(definition.description, player.id)
+          this.notify(`${command}, ${definition.verboseCommand} ${definition.description}`, player.id)
         }
       }
     })
@@ -425,6 +497,18 @@ export class Instance extends EventTarget {
     }
   }
 
+  private async handleGameEnd2() {
+    const next = this.levelManager.peekName();
+    try {
+      const level = await this.levelManager.pop()
+      this.emit('loadLevel', level.name);
+      this.room.loadLev(level.name, level.data);
+    } catch(e) {
+      this.error(`Failed to load ${next}, restarting current level, next level will be: ${this.levelManager.peekName()}`)
+      this.room.restartGame()
+    }
+  }
+
   private setNewGame = () => {
     this.gameStart = new Date();
     this.gameId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
@@ -447,18 +531,17 @@ export class Instance extends EventTarget {
     room.onPlayerChat = (player : WLPlayer, message : string) => this.emit('playerChat', {player, message})
     room.onPlayerTeamChange = (player : WLPlayer, byPlayer : WLPlayer) => this.emit('playerTeamChange', {player, byPlayer})
     room.onPlayerAdminChange = (player : WLPlayer, byPlayer : WLPlayer) => this.emit('playerAdminChange', {player, byPlayer})
-    room.onGameTick = () => this.emit('gameTick', null)
+    room.onGameTick = () => this.emit('gameTick')
     room.onPlayerActivity = (player : WLPlayer) => this.emit('playerActivity', player)
     room.onRoomLink = (link: string) => this.emit('roomLink', link)
     room.onGameStart = () => this.emit('gameStart', room.getSettings())
-    room.onGameEnd = () => this.emit('gameEnd', null)
+    room.onGameEnd = () => this.emit('gameEnd')
     const originalGameEnd2 = room.onGameEnd2;
     room.onGameEnd2 = () => {
-      this.emit('gameEnd2', null);
-      (this.config.onGameEnd2 || originalGameEnd2).apply(room)
+      this.handleGameEnd2().then(() => this.emit('gameEnd2'))
     }
     room.onPlayerKilled = (killed : WLPlayer, killer : WLPlayer) => this.emit('playerKilled', {killed, killer})
-    room.onCaptcha = () => this.emit('captcha', null)
+    room.onCaptcha = () => this.emit('captcha')
   }
 
   private generateId():string {

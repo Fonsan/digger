@@ -39,6 +39,16 @@ export class Admin extends Plugin<AdminConfig> {
     this.onCommand(Command.AdminDefcon6, (player: WLPlayer, message: string) => {
       this.instance.error('Not yet implemented', player.id);
     })
+    this.onCommand(Command.AdminNextMap, (player: WLPlayer, message: string) => {
+      const token = message.substr(message.indexOf(' ') + 1)
+      const level = this.instance.findLevel(token)
+      if (!level) {
+        this.instance.error(`${token} not found`, player.id)
+        return
+      }
+      this.instance.notify(`Admin ${player.name} set next map: ${level}`)
+      this.instance.levelManager.setNext(level)
+    })
     this.onCommandWithTarget(Command.AdminClearBan, (player: WLPlayer, targetPlayer: WLPlayer) => {
       this.instance.room.clearBan(targetPlayer.id);
       this.instance.notify(`Clearing ban for player with previous id ${targetPlayer.id}`)
@@ -48,7 +58,7 @@ export class Admin extends Plugin<AdminConfig> {
     this.onCommandWithTarget(Command.AdminKick, (player: WLPlayer, targetPlayer: WLPlayer, args: string[]) => {
       this.instance.room.kickPlayer(targetPlayer.id, `You have been kicked ${args[0] || ''}`, false);
     })
-    this.onCommandWithTarget(Command.AdminKick, (player: WLPlayer, targetPlayer: WLPlayer, args: string[]) => {
+    this.onCommandWithTarget(Command.AdminBan, (player: WLPlayer, targetPlayer: WLPlayer, args: string[]) => {
       this.instance.temporaryBan(
         targetPlayer,
         `You have been kicked for ${Math.round(this.config.kickDuration / 1000 / 60)} minutes ${args[0] || ''}`,

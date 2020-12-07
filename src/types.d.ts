@@ -103,3 +103,5 @@ declare interface PlayerChat {
 declare interface PlayerKilled {
   killed: WLPlayer, killer: WLPlayer
 }
+
+declare const lunr;
