@@ -6930,7 +6930,7 @@ Instance.defaultConfig = {
         },
         scores: { enabled: true },
         slurper: {
-            enabled: true,
+            enabled: false,
             events: [
                 'captcha',
                 'changePlayerName',
