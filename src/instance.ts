@@ -215,7 +215,7 @@ export class Instance extends EventTarget {
     this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
     this.eventTarget = (this as CustomEventTarget);
     this.setNewGame();
-    if (config.levels.length == 0) {
+    if (!config.levels || config.levels.length == 0) {
       throw 'You must set levels to await (await fetch("https://webliero.gitlab.io/webliero-maps/pools/index.json").json()'
     }
     if (initialSettings.levelPool) {
