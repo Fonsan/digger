@@ -211,7 +211,7 @@ export class Instance extends EventTarget {
     window.digger = this;
     this.commandRegistry = new CommandRegistry(this);
     this.levelIndex = new LevelIndex(this.config.levelBaseURL, this.config.levels);
-    this.serverId = this.initOptions.roomName.replace(/[^A-Z0-9]/gi, '-').toLowerCase()
+    this.serverId = this.initOptions.roomName.replace(/[^A-Z0-9]/gi, '-').replace(/\-+/gi, '-').replace(/\-$/, '').toLowerCase()
     this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
     this.eventTarget = (this as CustomEventTarget);
     this.setNewGame();
