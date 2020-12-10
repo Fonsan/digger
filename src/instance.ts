@@ -250,6 +250,7 @@ export class Instance extends EventTarget {
     this.room.setSettings(this.initialSettings);
     this.registerRoomCallbacks(this.fullRoom)
     this.enablePlugins()
+    this.on('roomLink', () => this.room.endGame()) // Force first map
   }
 
   public log(...args: any[]):void  {
