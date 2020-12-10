@@ -6466,31 +6466,87 @@ class SearchLevels extends Plugin {
     }
 }
 
+class ReconnectingWebSocket {
+    constructor(url, callback, delay) {
+        this.alive = true;
+        this.send = (message) => {
+            if (!this.alive) {
+                return;
+            }
+            if (this.webSocket.readyState == WebSocket.OPEN) {
+                this.webSocket.send(message);
+            }
+            else {
+                if (this.messageQueue.length > ReconnectingWebSocket.maxQueueSize) {
+                    console.log("Max message queue for slurper exceeded shutting down slurper");
+                    this.alive = false;
+                    return;
+                }
+                else {
+                    this.messageQueue.push(message);
+                }
+            }
+        };
+        this.reconnect = () => {
+            if (!this.alive) {
+                return;
+            }
+            if (this.webSocket) {
+                this.webSocket.close();
+            }
+            this.webSocket = new WebSocket(this.url);
+            this.webSocket.onopen = this.onopen;
+            this.webSocket.onclose = this.scheduleReconnect;
+            this.webSocket.onerror = this.scheduleReconnect;
+            this.webSocket.onmessage = this.callback && this.callback.bind(this.webSocket);
+        };
+        this.scheduleReconnect = () => {
+            setTimeout(this.reconnect, this.delay / 2 + Math.random() * this.delay);
+        };
+        this.onopen = () => {
+            this.messageQueue.forEach(message => this.webSocket.send(message));
+            this.messageQueue = [];
+        };
+        this.url = url;
+        this.callback = callback;
+        this.delay = delay || ReconnectingWebSocket.delay;
+        this.messageQueue = [];
+        this.reconnect();
+    }
+}
+ReconnectingWebSocket.delay = 3000;
+ReconnectingWebSocket.maxQueueSize = 5000;
+
 class Slurper extends Plugin {
+    constructor() {
+        super(...arguments);
+        this.messageId = 0;
+        this.publish = (event) => {
+            let message = {
+                id: this.messageId++,
+                time: Date.now(),
+                serverId: this.instance.serverId,
+                instanceId: this.instance.instanceId,
+                gameId: this.instance.gameId,
+                gameStart: this.instance.gameStart.getTime(),
+                event: event.type,
+            };
+            if (event.detail !== undefined && event.detail !== null) {
+                message.data = event.detail;
+            }
+            if (this.webSocket) {
+                this.webSocket.send(JSON.stringify(message));
+            }
+            this.instance.log(message);
+        };
+    }
     activate() {
         if (this.config.url) {
-            this.webSocket = new WebSocket(this.config.url);
+            this.webSocket = new ReconnectingWebSocket(this.config.url, this.instance.log);
         }
         this.config.events.forEach(eventName => {
             this.on(eventName, this.publish.bind(this));
         });
-    }
-    publish(event) {
-        let message = {
-            time: Date.now(),
-            serverId: this.instance.serverId,
-            instanceId: this.instance.instanceId,
-            gameId: this.instance.gameId,
-            gameStart: this.instance.gameStart.getTime(),
-            event: event.type,
-        };
-        if (event.detail !== undefined && event.detail !== null) {
-            message.data = event.detail;
-        }
-        if (this.webSocket && this.webSocket.readyState == WebSocket.OPEN) {
-            this.webSocket.send(JSON.stringify(message));
-        }
-        this.instance.log(message);
     }
 }
 
@@ -6595,6 +6651,9 @@ class Instance extends EventTarget {
         this.activePlayers = new Map();
         this.electionTimeouts = new Map();
         this.plugins = new Map();
+        this.log = (...args) => {
+            console.log(...args.map(x => JSON.stringify(x)));
+        };
         this.handleHelp = (player, message) => {
             this.notify("Available commands:", player.id);
             Array.from(this.commandRegistry.activeCommands.keys()).sort().forEach((command) => {
@@ -6690,9 +6749,6 @@ class Instance extends EventTarget {
         this.registerRoomCallbacks(this.fullRoom);
         this.enablePlugins();
         this.on('roomLink', () => this.room.endGame()); // Force first map
-    }
-    log(...args) {
-        console.log(...args.map(x => JSON.stringify(x)));
     }
     on(name, listener) {
         this.eventTarget.addEventListener(name, listener);

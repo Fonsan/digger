@@ -253,7 +253,7 @@ export class Instance extends EventTarget {
     this.on('roomLink', () => this.room.endGame()) // Force first map
   }
 
-  public log(...args: any[]):void  {
+  public log = (...args: any[]) =>  {
     console.log(...args.map(x => JSON.stringify(x)))
   }
 
