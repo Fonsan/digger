@@ -211,7 +211,7 @@ export class Instance extends EventTarget {
     window.digger = this;
     this.commandRegistry = new CommandRegistry(this);
     this.levelIndex = new LevelIndex(this.config.levelBaseURL, this.config.levels);
-    this.serverId = this.initOptions.roomName.replace(/[^A-Z0-9]/gi, '-').replace(/\-+/gi, '-').replace(/\-$/, '').toLowerCase()
+    this.serverId = this.generateServerId(this.initOptions.roomName)
     this.instanceId = `${Date.now().toString(36)}#${Math.round(Math.random() * Math.pow(36, 3)).toString(36)}`
     this.eventTarget = (this as CustomEventTarget);
     this.setNewGame();
@@ -558,6 +558,11 @@ export class Instance extends EventTarget {
     }
     room.onPlayerKilled = (killed : WLPlayer, killer : WLPlayer) => this.emit('playerKilled', {killed, killer})
     room.onCaptcha = () => this.emit('captcha')
+  }
+
+  private generateServerId(roomName:string):string {
+    const hash = roomName.split('').reduce((acc, el) => Math.imul(31, acc) + el.charCodeAt(0) | 0, 0).toString(36).substr(0, 3)
+    return roomName.replace(/[^A-Z0-9]/gi, '-').replace(/\-+/gi, '-').replace(/\-$/, '').toLowerCase() + `-${hash}`
   }
 
   private generateId():string {
