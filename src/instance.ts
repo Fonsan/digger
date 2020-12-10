@@ -553,7 +553,6 @@ export class Instance extends EventTarget {
     room.onRoomLink = (link: string) => this.emit('roomLink', link)
     room.onGameStart = () => this.emit('gameStart', room.getSettings())
     room.onGameEnd = () => this.emit('gameEnd')
-    const originalGameEnd2 = room.onGameEnd2;
     room.onGameEnd2 = () => {
       this.handleGameEnd2().then(() => this.emit('gameEnd2'))
     }
