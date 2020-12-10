@@ -37,6 +37,10 @@ export class ReconnectingWebSocket {
       return;
     }
     if (this.webSocket) {
+      this.webSocket.onopen = null;
+      this.webSocket.onclose = null;
+      this.webSocket.onerror = null;
+      this.webSocket.onmessage = null;
       this.webSocket.close()
     }
     this.webSocket = new WebSocket(this.url)
