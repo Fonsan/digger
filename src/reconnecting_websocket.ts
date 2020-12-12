@@ -1,17 +1,20 @@
 export class ReconnectingWebSocket {
   static delay = 3000;
   static maxQueueSize = 5000;
+  static flushDelay = 500;
   public readonly url: string;
   private callback?: Function;
   private webSocket!: WebSocket;
   private delay: number;
   private messageQueue: string[];
   private alive = true;
+  private timeout:number;
   constructor(url: string, callback?: (ev: MessageEvent) => any, delay?:number) {
     this.url = url
     this.callback = callback;
     this.delay = delay || ReconnectingWebSocket.delay
     this.messageQueue = []
+    this.timeout = NaN;
     this.reconnect();
   }
 
@@ -20,7 +23,13 @@ export class ReconnectingWebSocket {
       return;
     }
     if (this.webSocket.readyState == WebSocket.OPEN) {
-      this.webSocket.send(message)
+      this.messageQueue.push(message)
+      if (!this.timeout) {
+        setTimeout(() => {
+          this.timeout = NaN;
+          this.flush()
+        }, ReconnectingWebSocket.flushDelay)
+      }
     } else {
       if (this.messageQueue.length > ReconnectingWebSocket.maxQueueSize) {
         console.log("Max message queue for slurper exceeded shutting down slurper")
@@ -44,7 +53,7 @@ export class ReconnectingWebSocket {
       this.webSocket.close()
     }
     this.webSocket = new WebSocket(this.url)
-    this.webSocket.onopen = this.onopen
+    this.webSocket.onopen = this.flush
     this.webSocket.onclose = this.scheduleReconnect
     this.webSocket.onerror = this.scheduleReconnect
     this.webSocket.onmessage = this.callback && this.callback.bind(this.webSocket);
@@ -54,8 +63,10 @@ export class ReconnectingWebSocket {
     setTimeout(this.reconnect, this.delay / 2 + Math.random() * this.delay)
   }
 
-  private onopen = () => {
-    this.messageQueue.forEach(message => this.webSocket.send(message))
-    this.messageQueue = []
+  private flush = () => {
+    if (this.messageQueue.length > 0) {
+      this.webSocket.send(this.messageQueue.join("\n"))
+      this.messageQueue = []
+    }
   }
 }
