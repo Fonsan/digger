@@ -1,8 +1,12 @@
+image: node:latest
+cache: node_modules/
 pages:
   stage: deploy
   script:
+    - npm i
+    - npx rollup --config rollup.config.js
     - mkdir .public
-    - cp -r * .public
+    - cp -r dist .public/
     - mv .public public
   artifacts:
     paths:
