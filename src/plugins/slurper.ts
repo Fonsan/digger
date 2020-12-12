@@ -3,6 +3,7 @@ import { EventName } from '../instance'
 import { ReconnectingWebSocket } from '../reconnecting_websocket'
 export interface SlurperConfig extends PluginConfig {
   url?: string;
+  log: boolean,
   events: EventName[];
 }
 export class Slurper extends Plugin<SlurperConfig> {
@@ -10,7 +11,15 @@ export class Slurper extends Plugin<SlurperConfig> {
   private messageId = 0;
   public activate() {
     if (this.config.url) {
-      this.webSocket = new ReconnectingWebSocket(this.config.url, this.instance.log)
+      if (this.config.url.match(/^wss?\:\/\/.+\//)) {
+        throw 'slurper url should not include path'
+      }
+      const url = `${this.config.url}/slurp/${this.instance.serverId}`
+      this.instance.log(`Slurper connecting to ${url}`)
+      this.webSocket = new ReconnectingWebSocket(
+        url,
+        this.instance.log
+      )
     }
     this.config.events.forEach(eventName => {
       this.on(eventName, this.publish.bind(this));
@@ -30,9 +39,11 @@ export class Slurper extends Plugin<SlurperConfig> {
     if (event.detail !== undefined && event.detail !== null) {
       message.data = event.detail
     }
+    if (this.config.log) {
+      this.instance.log(message)
+    }
     if (this.webSocket) {
       this.webSocket.send(JSON.stringify(message))
     }
-    this.instance.log(message)
   }
 }

@@ -158,6 +158,7 @@ export class Instance extends EventTarget {
       scores: {enabled: true},
       slurper: {
         enabled: false,
+        log: false,
         events: [
           'captcha',
           'changePlayerName',
