@@ -1,5 +1,7 @@
 image: node:latest
-cache: node_modules/
+cache:
+  paths:
+    - node_modules/
 pages:
   stage: deploy
   script:
