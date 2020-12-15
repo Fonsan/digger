@@ -24,12 +24,7 @@ export class ReconnectingWebSocket {
     }
     if (this.webSocket.readyState == WebSocket.OPEN) {
       this.messageQueue.push(message)
-      if (!this.timeout) {
-        setTimeout(() => {
-          this.timeout = NaN;
-          this.flush()
-        }, ReconnectingWebSocket.flushDelay)
-      }
+      this.checkFlush()
     } else {
       if (this.messageQueue.length > ReconnectingWebSocket.maxQueueSize) {
         console.log("Max message queue for slurper exceeded shutting down slurper")
@@ -38,6 +33,15 @@ export class ReconnectingWebSocket {
       } else {
         this.messageQueue.push(message)
       }
+    }
+  }
+
+  private checkFlush = () => {
+    if (this.timeout && this.webSocket.readyState == WebSocket.OPEN) {
+      this.timeout = NaN;
+      this.flush()
+    } else {
+      this.timeout = window.setTimeout(this.checkFlush, ReconnectingWebSocket.flushDelay)
     }
   }
 
