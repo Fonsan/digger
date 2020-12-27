@@ -18,11 +18,11 @@ import { NextMap } from './plugins/next_map'
 import { Scores } from './plugins/scores'
 import { SearchLevels, SearchLevelsConfig } from './plugins/search_levels'
 import { Slurper, SlurperConfig} from './plugins/slurper'
-import { VoteMap } from './plugins/vote_map'
+import { VoteMap, VoteMapConfig } from './plugins/vote_map'
 import { VoteMute, VoteMuteConfig} from './plugins/vote_mute'
 import { VoteKick, VoteKickConfig} from './plugins/vote_kick'
-import { VoteRestartMap } from './plugins/vote_restart_map'
-import { VoteSkipMap } from './plugins/vote_skip_map'
+import { VoteRestartMap, VoteRestartMapConfig } from './plugins/vote_restart_map'
+import { VoteSkipMap, VoteSkipMapConfig } from './plugins/vote_skip_map'
 
 export interface Config {
   configVersion: number,
@@ -44,11 +44,11 @@ export interface Config {
     searchLevels: SearchLevelsConfig,
     scores: PluginConfig,
     slurper: SlurperConfig,
-    voteMap: PluginConfig,
+    voteMap: VoteMapConfig,
     voteMutePlayer: VoteMuteConfig,
     voteKickPlayer: VoteKickConfig,
-    voteRestartMap: PluginConfig,
-    voteSkipMap: PluginConfig,
+    voteRestartMap: VoteRestartMapConfig,
+    voteSkipMap: VoteSkipMapConfig,
   }
 }
 enum EventEnum {
@@ -183,17 +183,19 @@ export class Instance extends EventTarget {
           'teamScores',
         ]
       },
-      voteMap: { enabled: true },
+      voteMap: { enabled: true, ratio: 0.5 },
       voteMutePlayer: {
         enabled: true,
+        ratio: 0.51,
         muteDuration: 15 * 60 * 1000
       },
       voteKickPlayer: {
         enabled: true,
+        ratio: 0.8,
         kickDuration: 15 * 60 * 1000
       },
-      voteRestartMap: {enabled: true},
-      voteSkipMap: {enabled: true}
+      voteRestartMap: { enabled: true, ratio: 0.5 },
+      voteSkipMap: { enabled: true, ratio: 0.5 }
     }
   }
 
@@ -345,7 +347,7 @@ export class Instance extends EventTarget {
     return playerId % 1000
   }
 
-  public election(name:string, player: WLPlayer, callback: Function) {
+  public election(name:string, ratio: number, player: WLPlayer, callback: Function) {
     const auth = this.playerIdToAuth.get(player.id) as string;
     if (this.electionTimeouts.get(auth)) {
       this.error(`You may only start a vote once every ${this.config.voteTimeout / 1000} seconds`, player.id);
@@ -359,7 +361,7 @@ export class Instance extends EventTarget {
       auth,
       window.setTimeout(() => this.electionTimeouts.delete(auth), this.config.voteTimeout)
     )
-    new Election(this, name, player, () => {
+    new Election(this, name, ratio, player, () => {
       this.currentElection = undefined;
       callback()
     })

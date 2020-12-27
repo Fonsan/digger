@@ -9,11 +9,14 @@ export class Election {
   private timeout: number;
   private callback: Function;
   private voteCommandHandler: Function;
+  private ratio: number;
   private ended = false;
 
-  constructor(instance: Instance, name: string, initiatingPlayer: WLPlayer, callback: Function) {
+
+  constructor(instance: Instance, name: string, ratio: number, initiatingPlayer: WLPlayer, callback: Function) {
     this.instance = instance
     this.name = name;
+    this.ratio = ratio;
     this.callback = callback;
     this.instance.currentElection = this;
     const auth = this.instance.playerIdToAuth.get(initiatingPlayer.id) as string;
@@ -45,10 +48,11 @@ export class Election {
 
   private reCount = () => {
     const playerCount = Object.keys(this.instance.playerIdToAuth).length;
-    const neededVotes = playerCount == 2 ? 2 : playerCount / 2;
+    const confirmVoteCount = playerCount == 2 ? 2 : Math.min(playerCount * this.ratio, playerCount - 1);
+    const abolishVoteCount = Math.max(1, playerCount - confirmVoteCount)
     const voteCounts = Array.from(this.votes.values()).reduce((acc, vote) => { acc[vote] += 1; return acc; }, {y: 0, n: 0});
     const prefix = `Vote: ${this.name}, ${voteCounts.y}/${playerCount} in favour, ${voteCounts.n}/${playerCount} against. `
-    if(voteCounts.y >= neededVotes) {
+    if(voteCounts.y >= confirmVoteCount) {
       this.instance.notify(`${prefix}Moving ahead with ${this.name}`);
       try {
         this.callback();
@@ -57,7 +61,7 @@ export class Election {
         this.instance.log('Exception', e)
       }
 
-    } else if(voteCounts.n >= neededVotes || voteCounts.n + voteCounts.y == playerCount) {
+    } else if(voteCounts.n >= abolishVoteCount || voteCounts.n + voteCounts.y == playerCount) {
       this.instance.notify(`${prefix}Dismissed ${this.name}`);
       this.end();
     } else {
