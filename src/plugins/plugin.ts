@@ -17,7 +17,6 @@ export abstract class Plugin<ConfigType extends PluginConfig> {
   commandHandlers: Function[] = [];
 
   constructor(instance: Instance, config: ConfigType) {
-    instance.log(`${this.constructor.name} loaded`)
     this.instance = instance;
     this.config = config;
   }
