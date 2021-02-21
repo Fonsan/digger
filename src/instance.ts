@@ -199,7 +199,7 @@ export class Instance extends EventTarget {
   }
 
   public log = (...args: any[]) =>  {
-    console.log(...args.map(x => JSON.stringify(x)))
+    console.log(...args.map(x => typeof x == 'string' ? x : JSON.stringify(x)))
   }
 
   public on(name: EventName, listener: CustomEventListener):void {
