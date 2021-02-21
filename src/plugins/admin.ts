@@ -7,8 +7,14 @@ export interface  AdminConfig extends PluginConfig {
   kickDuration: number;
 }
 export class Admin extends Plugin<AdminConfig> {
+  static defaultConfig = {
+    auths: [],
+    muteDuration: 15 * 60 * 1000,
+    kickDuration: 15 * 60 * 1000,
+    ...Plugin.defaultConfig
+  }
   auths: Set<string>;
-  constructor(instance: Instance, config: any) {
+  constructor(instance: Instance, config: AdminConfig) {
     super(instance, config)
     this.auths = new Set(config.auths)
   }

@@ -7,6 +7,33 @@ export interface SlurperConfig extends PluginConfig {
   events: EventName[];
 }
 export class Slurper extends Plugin<SlurperConfig> {
+  static defaultConfig = {
+    enabled: false,
+    log: false,
+    events: [
+      'captcha',
+      'changePlayerName',
+      'gameEnd',
+      'gameEnd2',
+      'gameStart',
+      'loadLevel',
+      // 'gameTick', // Disabled for performance reasons
+      'newPlayer',
+      'playerActive',
+      // 'playerActivity', // Disabled for performance reasons
+      'playerAdminChange',
+      'playerChat',
+      'playerInactive',
+      'playerJoin',
+      'playerKicked',
+      'playerKilled',
+      'playerLeave',
+      'playerScores',
+      'playerTeamChange',
+      'roomLink',
+      'teamScores',
+    ]
+  } as SlurperConfig;
   webSocket?: ReconnectingWebSocket;
   private messageId = 0;
   public activate() {

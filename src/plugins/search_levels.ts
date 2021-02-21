@@ -4,6 +4,10 @@ export interface  SearchLevelsConfig extends PluginConfig {
   resultSize: number
 }
 export class SearchLevels extends Plugin<SearchLevelsConfig> {
+  static defaultConfig = {
+    resultSize: 4,
+    ...Plugin.defaultConfig
+  }
   public activate() {
     this.onCommand(Command.SearchLevels, (commandPlayer, message) => {
       const results = this.instance.levelIndex.search(message.substr(message.indexOf(' ') + 1))

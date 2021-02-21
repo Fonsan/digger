@@ -3,6 +3,10 @@ export interface ConnectionConfig extends PluginConfig {
   maxConnectionsPerIP: number
 }
 export class Connection extends Plugin<ConnectionConfig> {
+  static defaultConfig = {
+    maxConnectionsPerIP: 3,
+    ...Plugin.defaultConfig
+  }
   connectionMap = new Map<string, Map<number, Date>>();
   playerIdToConn = new Map<number, string>();
 

@@ -1,5 +1,6 @@
 import {Plugin, PluginConfig} from './plugin'
 export class Scores extends Plugin<PluginConfig> {
+  static defaultConfig = {enabled: true}
   public activate() {
     this.on('gameEnd', this.handleGameEnd)
   }

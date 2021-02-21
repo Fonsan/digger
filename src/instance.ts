@@ -46,7 +46,7 @@ export interface Config {
     slurper: SlurperConfig,
     voteMap: VoteMapConfig,
     voteMutePlayer: VoteMuteConfig,
-    voteKickPlayer: VoteKickConfig,
+    voteKick: VoteKickConfig,
     voteRestartMap: VoteRestartMapConfig,
     voteSkipMap: VoteSkipMapConfig,
   }
@@ -122,80 +122,22 @@ export class Instance extends EventTarget {
     levels: [],
     levelBaseURL: "https://webliero.gitlab.io/webliero-maps",
     plugins: {
-      admin: {
-        enabled: true,
-        auths: [],
-        muteDuration: 15 * 60 * 1000,
-        kickDuration: 15 * 60 * 1000
-      },
-      afk: {
-        enabled: true,
-        timeout: 60000,
-        graceTime: 10000,
-        hotTimeout: 3000,
-        kickAFKSpectatorWhenFull: true
-      },
-      doubler: {
-        enabled: true,
-        threshold: 8
-      },
-      info: {
-        enabled: true,
-        announceNameChange: true,
-        annouceNamesCount: 4
-      },
-      connection: {
-        enabled: true,
-        maxConnectionsPerIP: 3
-      },
-      list: {enabled: true},
-      nextMap: {enabled: true},
-      onePlayer: {enabled: true},
-      searchLevels: {
-        enabled: true,
-        resultSize: 4
-      },
-      scores: {enabled: true},
-      slurper: {
-        enabled: false,
-        log: false,
-        events: [
-          'captcha',
-          'changePlayerName',
-          'gameEnd',
-          'gameEnd2',
-          'gameStart',
-          'loadLevel',
-          // 'gameTick', // Disabled for performance reasons
-          'newPlayer',
-          'playerActive',
-          // 'playerActivity', // Disabled for performance reasons
-          'playerAdminChange',
-          'playerChat',
-          'playerInactive',
-          'playerJoin',
-          'playerKicked',
-          'playerKilled',
-          'playerLeave',
-          'playerScores',
-          'playerTeamChange',
-          'roomLink',
-          'teamScores',
-        ]
-      },
-      voteMap: { enabled: true, ratio: 0.5 },
-      voteMutePlayer: {
-        enabled: true,
-        ratio: 0.51,
-        muteDuration: 15 * 60 * 1000
-      },
-      voteKickPlayer: {
-        enabled: true,
-        ratio: 0.8,
-        kickDuration: 15 * 60 * 1000
-      },
-      voteRestartMap: { enabled: true, ratio: 0.5 },
-      voteSkipMap: { enabled: true, ratio: 0.5 }
+      admin: Admin.defaultConfig,
+      afk: AFK.defaultConfig,
+      doubler: Doubler.defaultConfig,
+      info: Info.defaultConfig,
+      connection: Connection.defaultConfig,
+      list: Plugin.defaultConfig,
+      nextMap: Plugin.defaultConfig,
+      onePlayer: Plugin.defaultConfig,
+      searchLevels: SearchLevels.defaultConfig,
+      scores: Scores.defaultConfig,
+      slurper: Slurper.defaultConfig,
+      voteMap: VoteMap.defaultConfig,
+      voteMutePlayer: VoteMute.defaultConfig,
+      voteKick: VoteKick.defaultConfig,
+      voteRestartMap: VoteRestartMap.defaultConfig,
+      voteSkipMap: VoteSkipMap.defaultConfig
     }
   }
 
@@ -454,10 +396,10 @@ export class Instance extends EventTarget {
               new VoteMute(this, this.config.plugins.voteMutePlayer)
             )
             break;
-          case 'voteKickPlayer':
+          case 'voteKick':
             this.registerPlugin(
               name,
-              new VoteKick(this, this.config.plugins.voteKickPlayer)
+              new VoteKick(this, this.config.plugins.voteKick)
             )
             break;
           case 'voteRestartMap':

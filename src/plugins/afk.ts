@@ -7,6 +7,13 @@ export interface AFKConfig extends PluginConfig {
   kickAFKSpectatorWhenFull: boolean;
 }
 export class AFK extends Plugin<AFKConfig> {
+  static defaultConfig = {
+    timeout: 60000,
+    graceTime: 10000,
+    hotTimeout: 3000,
+    kickAFKSpectatorWhenFull: true,
+    ...Plugin.defaultConfig
+  }
   private readonly playingPlayers = new Map<number, number>();
   private readonly hotPlayers = new Map<number, number>();
   private readonly kickCandidates = new Map<number, Date>();

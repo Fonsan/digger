@@ -4,6 +4,10 @@ export interface VoteMapConfig extends PluginConfig {
   ratio: number
 }
 export class VoteMap extends Plugin<VoteMapConfig> {
+  static defaultConfig = {
+    ratio: 0.5,
+    ...Plugin.defaultConfig
+  }
   public activate() {
     this.onCommand(Command.VoteMap, (player: WLPlayer, message: string) => {
       const token = message.substr(message.indexOf(' ') + 1)

@@ -3,6 +3,11 @@ export interface DoublerConfig extends PluginConfig {
   threshold: number
 }
 export class Doubler extends Plugin<DoublerConfig> {
+  static defaultConfig = {
+    threshold: 8,
+    ...Plugin.defaultConfig
+  }
+
   public activate() {
     this.on('gameEnd', this.updateDouble)
   }

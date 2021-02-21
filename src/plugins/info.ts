@@ -5,6 +5,11 @@ export interface InfoConfig extends PluginConfig {
   annouceNamesCount: number;
 }
 export class Info extends Plugin<InfoConfig> {
+  static defaultConfig = {
+    announceNameChange: true,
+    annouceNamesCount: 4,
+    ...Plugin.defaultConfig
+  }
   aliases = new Map<string, Map<string, Date>>()
   public activate() {
     this.on('playerJoin', this.handleJoin)

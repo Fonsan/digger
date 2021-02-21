@@ -5,6 +5,11 @@ export interface VoteMuteConfig extends PluginConfig {
   muteDuration: number;
 }
 export class VoteMute extends Plugin<VoteMuteConfig> {
+  static defaultConfig = {
+    ratio: 0.51,
+    muteDuration: 15 * 60 * 1000,
+    ...Plugin.defaultConfig
+  }
   public activate() {
     const minutes = this.config.muteDuration / 1000 / 60
     this.onCommandWithTarget(Command.VoteMute, (player, targetPlayer, args: string[]) => {

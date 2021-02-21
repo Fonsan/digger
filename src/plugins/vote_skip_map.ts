@@ -4,6 +4,10 @@ export interface VoteSkipMapConfig extends PluginConfig {
   ratio: number
 }
 export class VoteSkipMap extends Plugin<VoteSkipMapConfig> {
+  static defaultConfig = {
+    ratio: 0.5,
+    ...Plugin.defaultConfig
+  }
   public activate() {
     this.onCommand(Command.VoteSkip, (player: WLPlayer, message: string) => {
       this.instance.election(

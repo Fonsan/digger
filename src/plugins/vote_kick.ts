@@ -5,6 +5,11 @@ export interface VoteKickConfig extends PluginConfig {
   kickDuration: number;
 }
 export class VoteKick extends Plugin<VoteKickConfig> {
+  static defaultConfig = {
+    ratio: 0.8,
+    kickDuration: 15 * 60 * 1000,
+    ...Plugin.defaultConfig
+  }
   public activate() {
     const minutes = Math.round(this.config.kickDuration / 1000 / 60)
     this.onCommandWithTarget(Command.VoteKick, (player, targetPlayer, args: string[]) => {

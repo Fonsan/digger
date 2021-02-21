@@ -8,6 +8,9 @@ interface Listener {
   listener: CustomEventListener;
 }
 export abstract class Plugin<ConfigType extends PluginConfig> {
+  static defaultConfig = {
+    enabled: true
+  } as PluginConfig;
   instance: Instance;
   config: ConfigType;
   listeners: Listener[] = [];
