@@ -309,6 +309,20 @@ export class Instance extends EventTarget {
     })
   }
 
+  public async loadHostedMod(name: string) {
+    let basemod = await(
+      await fetch(`https://webliero.gitlab.io/webliero-mods/${name}/mod.json5`)
+    ).text()
+    let sprites = await(
+      await fetch(`https://webliero.gitlab.io/webliero-mods/${name}/sprites.wlsprt`)
+    ).arrayBuffer()
+    const mdzip = new JSZip();
+    mdzip.file('mod.json5', basemod);
+    mdzip.file('sprites.wlsprt', sprites, { binary: true });
+    const mod = mdzip.generate({ type: "arraybuffer" });
+    this.room.loadMod(mod)
+  }
+
   private registerPlugin(name: string, plugin: Plugin<any>) {
     this.plugins.set(name, plugin);
     plugin.enable();

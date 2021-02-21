@@ -1,3 +1,4 @@
+declare var JSZip: any;
 declare interface WLInitOptions {
   roomName?: string
   password?: string
